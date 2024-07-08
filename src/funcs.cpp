@@ -12,14 +12,14 @@
 namespace funcs{
 	unsigned int TextureFromFile(const std::string & path, std::string directory) {
 		int width, height, nChannels;
-		std::cout << directory << " " << path << std::endl;
+		// std::cout << directory << " " << path << std::endl;
 		unsigned char* data = stbi_load((directory + "/" + path).c_str(), &width, &height, &nChannels, 0);
-		std::cout << (directory + "/" + path).c_str() << std::endl;
+		// std::cout << (directory + "/" + path).c_str() << std::endl;
 		unsigned int id = 1;
-		std::cout << id << " : " << &id << std::endl;
+		// std::cout << id << " : " << &id << std::endl;
 		glGenTextures(1, &id);
 
-		std::cout << "HERE NOW " << std::endl;
+		// std::cout << "HERE NOW " << std::endl;
 
 		if (data) {
 			GLenum format;

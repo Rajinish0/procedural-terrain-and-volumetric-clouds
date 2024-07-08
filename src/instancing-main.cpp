@@ -1,5 +1,5 @@
 /*
-* EXPLORING TEXT RENDERING (will seperate into a seperate library later)
+* FOR EXPLORING INSTANCING
 */
 
 
@@ -15,13 +15,10 @@
 #include "funcs.h"
 #include "window.h"
 #include "model.h"
-#include <map>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include "textrender.h"
-//#include <ft2build.h> // checking if build was good
-//#include FT_FREETYPE_H
+#include <ft2build.h> // checking if build was good
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -121,16 +118,6 @@ float simpleQuad[]{
 	 0.5f, 0.5f, 0.0f, 1.0f, 1.0f,
 };
 
-float squareQuad[]{
-	0.0f,	0.0f, 0.0f,
-	500.0f, 0.0f, 0.0f,
-	500.0f, 500.0f, 0.0f,
-
-	0.0f, 0.0f, 0.0f,
-	500.0f, 500.0f, 0.0f,
-	0.0f, 500.0f, 0.0f
-};
-
 unsigned int indicies[] = {
 	0, 1, 2,
 	0, 2, 3
@@ -154,7 +141,7 @@ glm::vec3 cubePositions[] = {
 unsigned int cubeVBO, cubeVAO, planeVAO, planeVBO,
 grassVAO, grassVBO, fbo, rbo, quadVAO, uboBlock,
 quadVBO, squareVAO, squareVBO, instanceVBO,
-asteroidVBO, sqVAO, sqVBO;
+asteroidVBO;
 unsigned int vertexShader;
 unsigned int fragShader;
 unsigned int texture, texture2,
@@ -166,66 +153,6 @@ Camera cam;
 std::vector<glm::vec3> vegetation;
 
 
-unsigned int textVAO, textVBO;
-//
-//struct Character {
-//	unsigned int TextureID;
-//	glm::ivec2 Size; //w, h
-//	glm::ivec2 Bearing; //bearingX, bearingY (offset from basline to left/top of the glyph)
-//	unsigned int Advance;
-//};
-//
-//std::map<char, Character> Characters;
-//
-//
-//void renderText(Shader& shader, std::string text, float x, float y, float scale, glm::vec3 color) {
-//	shader.use();
-//	shader.setVec3("textColor", color);
-//
-//	glActiveTexture(GL_TEXTURE0);
-//	glBindVertexArray(textVAO);
-//	for (const char c : text) {
-//		Character ch = Characters[c];
-//
-//		/*
-//		* x, y define the bottom left of the text
-//		* the explanation for (ch.Size.y - ch.Bearing.y) is pretty easy to understand
-//		* 
-//		* what i dont understand is why are texture coordinates flipped?
-//		* if xpos, ypos is the bottom left
-//		* then xpos, ypos + h should be the top left
-//		* why then are the texture coordinates there are 0, 0?
-//		* 
-//		* Are the texture coords for glyphs defined s.t. 0, 0 is at top left?
-//		*/
-//
-//		float xpos = x + ch.Bearing.x * scale;
-//		float ypos = y - (ch.Size.y - ch.Bearing.y) * scale;
-//
-//		float w = ch.Size.x * scale;
-//		float h = ch.Size.y * scale;
-//
-//		float verts[]{
-//			xpos, ypos + h, 0.0f, 0.0f,
-//			xpos, ypos,		0.0f, 1.0f,
-//			xpos + w, ypos, 1.0f, 1.0f,
-//
-//			xpos, ypos + h, 0.0f, 0.0f,
-//			xpos + w, ypos, 1.0f, 1.0f,
-//			xpos + w, ypos + h, 1.0f, 0.0f
-//		};
-//
-//		glBindTexture(GL_TEXTURE_2D, ch.TextureID);
-//		glBindBuffer(GL_ARRAY_BUFFER, textVBO);
-//		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(verts), verts);
-//		glDrawArrays(GL_TRIANGLES, 0, 6);
-//		x += (ch.Advance >> 6) * scale;// 1/64 * ch.Advance is the value in pixels for how much to go to the next x
-//									   // but 1/64 * ch.Advance is just >> 6 (bitshift right)
-//	}
-//
-//	glBindVertexArray(0);
-//	glBindTexture(GL_TEXTURE_2D, 0);
-//}
 
 
 int main() {
@@ -248,31 +175,24 @@ int main() {
 
 	Shader myshdr{ "shaders/cvert.glsl", "shaders/cfrag.glsl" };
 	Shader myshdr2{ "shaders/cvert.glsl", "shaders/borderfrag.glsl" };
-	// Shader myshdr3{ "cvert.glsl", "grassfrag.glsl" };
-	// Shader squareShader{ "squareV.glsl", "squareF.glsl", "squareGeom.glsl" };
-	// Shader modelShader{ "shader2.glsl", "cfrag.glsl", "modelGeom.glsl" };
-	// Shader normalVizShader{ "normalViz-vshader.glsl", "normalViz-frag.glsl",
-	// 						"normalViz-geom.glsl" };
-	// Shader instancingShader{ "instArray-vshader.glsl",
-	// 						 "instancing-fshader.glsl" };
-	// Shader pShader{ "model-vshader.glsl",
-	// 				   "model-fshader.glsl" };
+	Shader myshdr3{ "shaders/cvert.glsl", "shaders/grassfrag.glsl" };
+	Shader squareShader{ "shaders/squareV.glsl", "shaders/squareF.glsl", "shaders/squareGeom.glsl" };
+	Shader modelShader{ "shaders/shader2.glsl", "shaders/cfrag.glsl", "shaders/modelGeom.glsl" };
+	Shader normalVizShader{ "shaders/normalViz-vshader.glsl", "shaders/normalViz-frag.glsl",
+							"shaders/normalViz-geom.glsl" };
+	Shader instancingShader{ "shaders/instArray-vshader.glsl",
+							 "shaders/instancing-fshader.glsl" };
+	Shader pShader{"shaders/model-vshader.glsl", 
+				   "shaders/model-fshader.glsl"};
 
-	// Shader aShader{ "asteroid-vshader.glsl",
-	// 			   "model-fshader.glsl" };
-	// Shader orthShader{"orthotest.vert",
-	// 				  "orthotest.frag"};
-	Shader textShader{ "shaders/textVshader.glsl",
-					  "shaders/textFshader.glsl" };
+	Shader aShader{ "shaders/asteroid-vshader.glsl",
+				    "shaders/model-fshader.glsl" };
 
-	Model planet{ "D:/planet/planet.obj" };
+	Model planet{"D:/planet/planet.obj"};
 	Model asteriod{ "D:/rock/rock.obj" };
-	TextRenderer textRenderer;
 
 
 	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	glGenBuffers(1, &cubeVBO);
 	glGenBuffers(1, &planeVBO);
@@ -282,7 +202,6 @@ int main() {
 	glGenBuffers(1, &uboBlock);
 	glGenBuffers(1, &instanceVBO);
 	glGenBuffers(1, &asteroidVBO);
-	glGenBuffers(1, &sqVBO);
 
 	texture = funcs::TextureFromFile("container2.png", "D:");
 	texture2 = funcs::TextureFromFile("earth2.png", "D:");
@@ -293,7 +212,6 @@ int main() {
 	glGenVertexArrays(1, &grassVAO);
 	glGenVertexArrays(1, &quadVAO);
 	glGenVertexArrays(1, &squareVAO);
-	glGenVertexArrays(1, &sqVAO);
 
 
 	glBindVertexArray(cubeVAO);
@@ -356,13 +274,6 @@ int main() {
 
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(2 * sizeof(float)));
 	glEnableVertexAttribArray(1);
-
-	glBindVertexArray(sqVAO);
-	glBindBuffer(GL_ARRAY_BUFFER, sqVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(squareQuad), squareQuad, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
@@ -450,87 +361,32 @@ int main() {
 	glBindBuffer(GL_ARRAY_BUFFER, asteroidVBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::mat4) * amt, &modelMats[0], GL_STATIC_DRAW);
 
-	//FT_Library ft;
-	//if (FT_Init_FreeType(&ft)) {
-	//	std::cerr << "Could not init freetype lib" << std::endl;
-	//	return -1;
-	//}
+	for (unsigned int i = 0; i < asteriod.meshes.size(); ++i) {
+		glBindVertexArray(asteriod.meshes[i].VAO);
+		std::size_t vec4Size = sizeof(glm::vec4);
 
-	//FT_Face face;
-	//if (FT_New_Face(ft, "fonts/arial.ttf", 0, &face)) {
-	//	std::cout << "Error, failed to load font" << std::endl;
-	//	return -1;
-	//}
+		glEnableVertexAttribArray(3);
+		glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void*)0);
 
-	//FT_Set_Pixel_Sizes(face, 0, 48);
+		glEnableVertexAttribArray(4);
+		glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void*)(1 * vec4Size));
 
+		glEnableVertexAttribArray(5);
+		glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void*)(2 * vec4Size));
 
-	//glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-	//for (unsigned char c = 0; c < 128; c++) {
-	//	if (FT_Load_Char(face, c, FT_LOAD_RENDER)) {
-	//		std::cerr << "Failed to load glyph for charac: \"" << c
-	//				  << '"';
-	//	}
-	//	unsigned int texture;
-	//	glGenTextures(1, &texture);
-	//	glBindTexture(GL_TEXTURE_2D, texture);
-	//	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, face->glyph->bitmap.width,
-	//		face->glyph->bitmap.rows, 0, GL_RED, GL_UNSIGNED_BYTE, face->glyph->bitmap.buffer);
-	//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glEnableVertexAttribArray(6);
+		glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void*)(3 * vec4Size));
 
-	//	Character charac{
-	//		texture,
-	//		glm::ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
-	//		glm::ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top),
-	//		face->glyph->advance.x };
-	//	Characters[c] = charac;
-	//}
+		glVertexAttribDivisor(3, 1);
+		glVertexAttribDivisor(4, 1);
+		glVertexAttribDivisor(5, 1);
+		glVertexAttribDivisor(6, 1);
 
-	//FT_Done_Face(face);
-	//FT_Done_FreeType(ft);
-
-	//glGenVertexArrays(1, &textVAO);
-	//glGenBuffers(1, &textVBO);
-	//glBindVertexArray(textVAO);
-	//glBindBuffer(GL_ARRAY_BUFFER, textVBO);
-	//// quad has 6 verts plus 4 coords per vert
-	//glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, NULL, GL_DYNAMIC_DRAW);
-	//glEnableVertexAttribArray(0);
-	//glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
-	//glBindBuffer(GL_ARRAY_BUFFER, 0);
-	//glBindVertexArray(0);
-
-	//for (unsigned int i = 0; i < asteriod.meshes.size(); ++i) {
-	//	glBindVertexArray(asteriod.meshes[i].VAO);
-	//	std::size_t vec4Size = sizeof(glm::vec4);
-
-	//	glEnableVertexAttribArray(3);
-	//	glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void*)0);
-
-	//	glEnableVertexAttribArray(4);
-	//	glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void*)(1 * vec4Size));
-
-	//	glEnableVertexAttribArray(5);
-	//	glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void*)(2 * vec4Size));
-
-	//	glEnableVertexAttribArray(6);
-	//	glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void*)(3 * vec4Size));
-
-	//	glVertexAttribDivisor(3, 1);
-	//	glVertexAttribDivisor(4, 1);
-	//	glVertexAttribDivisor(5, 1);
-	//	glVertexAttribDivisor(6, 1);
-
-	//	glBindVertexArray(0);
+		glBindVertexArray(0);
 
 
-	//}
+	}
 
-
-	proj = glm::ortho(0.0f, 800.0f, 0.0f, 600.0f);
 	while (!window.shouldClose())
 	{
 		processInput(window.window);
@@ -538,40 +394,38 @@ int main() {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		view = cam.getView();
 
-		//orthShader.use();
-		//orthShader.setMatrix("proj", proj);
-		//
-		//glBindVertexArray(sqVAO);
+		/*
+		instancingShader.use();
+		glBindVertexArray(squareVAO);
 		//glDrawArrays(GL_TRIANGLES, 0, 6);
+		glDrawArraysInstanced(GL_TRIANGLES, 0, 6, 100);
+		*/
 
-		textShader.use();
-		textShader.setMatrix("proj", proj);
-		textRenderer.renderText(textShader, "SACRE BLEUU", 400.0f, 300.0f, 1.0f,
-			glm::vec3(1.0f, 0.5f, 0.0f), TextRenderer::CENTER);
-
-		/*renderText(textShader, "Learning", 0.0f, 0.0f, 1.0f,
-			glm::vec3(1.0f, 0.0f, 0.0f));*/
-		
-
-
-		//pShader.use();
-		//pShader.setMatrix("proj", proj);
-		//pShader.setMatrix("view", view);
-		//pShader.setMatrix("model", glm::mat4(1.0f));
-		//planet.draw(pShader);
+		pShader.use();
+		pShader.setMatrix("proj", proj);
+		pShader.setMatrix("view", view);
+		pShader.setMatrix("model", glm::mat4(1.0f));
+		planet.draw(pShader);
 
 
-		//aShader.use();
-		//aShader.setMatrix("proj", proj);
-		//aShader.setMatrix("view", view);
-		//for (unsigned int i = 0; i < asteriod.meshes.size(); ++i) {
-		//	glBindVertexArray(asteriod.meshes[i].VAO);
-		//	glDrawElementsInstanced(
-		//		GL_TRIANGLES, asteriod.meshes[i].indicies.size(), GL_UNSIGNED_INT, 0, amt
-		//	);
+		aShader.use();
+		aShader.setMatrix("proj", proj);
+		aShader.setMatrix("view", view);
+		for (unsigned int i = 0; i < asteriod.meshes.size(); ++i) {
+			glBindVertexArray(asteriod.meshes[i].VAO);
+			glDrawElementsInstanced(
+				GL_TRIANGLES, asteriod.meshes[i].indicies.size(), GL_UNSIGNED_INT, 0, amt
+			);
+		}
+
+
+		//glm::mat4 myMat(1.0f);
+		//myMat = glm::rotate(myMat, (float)glfwGetTime(), glm::vec3(0.0f, 1.0f, 0.0f));
+
+		//for (int i = 0; i < amt; ++i) {
+		//	pAndAShader.setMatrix("model", myMat*modelMats[i]);
+		//	asteriod.draw(pAndAShader);
 		//}
-
-
 
 		window.update();
 
