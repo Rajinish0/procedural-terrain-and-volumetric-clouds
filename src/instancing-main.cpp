@@ -188,8 +188,8 @@ int main() {
 	Shader aShader{ "shaders/asteroid-vshader.glsl",
 				    "shaders/model-fshader.glsl" };
 
-	Model planet{"D:/planet/planet.obj"};
-	Model asteriod{ "D:/rock/rock.obj" };
+	Model planet{"models/planet/planet.obj"};
+	Model asteriod{ "models/rock/rock.obj" };
 
 
 	glEnable(GL_DEPTH_TEST);
