@@ -1,1 +1,1 @@
-Just a starting point for opengl projects. The external libs were compiled using cmake.
+Just a starting point for opengl projects. The external libs were compiled using cmake for MinGW.
