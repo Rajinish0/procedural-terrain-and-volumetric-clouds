@@ -10,7 +10,11 @@ namespace funcs {
 	Mesh genSphere();
 	Mesh genTorus(); // or donut?
 	template<typename T>
-	T clamp(T val, T lowerb, T upperb);
+	T clamp(T val, T lowerb, T upperb){
+		if (val < lowerb) return lowerb;
+		if (val > upperb) return upperb;
+		return val;
+	}
 }
 
 #endif

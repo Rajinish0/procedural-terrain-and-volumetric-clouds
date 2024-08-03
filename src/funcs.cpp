@@ -73,10 +73,6 @@ namespace funcs{
 		return id;
 	}
 
-	template<typename T>
-	T clamp(T val, T lowerb, T upperb) {
-		return std::max(std::min(val, upperb), lowerb);
-	}
 
 	Mesh genSphere() {
 		std::vector<Vertex> vertices; 

@@ -1,6 +1,6 @@
 CC = g++
 CFLAGS = -Wall
-LIBS = -lglfw3 -lopengl32 -lgdi32 -lassimp -lfreetype -lpng -lbz2 -lz
+LIBS = -lglfw3 -lopengl32 -lgdi32 -lassimp -lfreetype -lpng -lbz2 -lz -lopenal32 -lsndfile
 SRCDIR = src
 BUILDDIR = build
 EXECUTABLE = main.exe
@@ -11,7 +11,7 @@ SOURCES := $(wildcard $(SRCDIR)/*.cpp)
 SOURCES += $(SRCDIR)/glad.c
 OBJECTS := $(patsubst $(SRCDIR)/%.cpp,$(BUILDDIR)/%.o,$(SOURCES))
 
-INCLUDES := -I$(INCDIR) -I$(INCDIR)/freetype2 -I/mingw64/include/freetype2
+INCLUDES := -I$(INCDIR) -I$(INCDIR)/freetype2
 
 all: $(EXECUTABLE)
 

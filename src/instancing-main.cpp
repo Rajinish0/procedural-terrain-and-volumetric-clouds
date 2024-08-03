@@ -18,13 +18,13 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include "audio_manager.h"
 #include <ft2build.h> // checking if build was good
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
 void mouse_callback(GLFWwindow* window, double xPos, double yPos);
-
 
 
 float vertices[] = {
@@ -157,7 +157,6 @@ std::vector<glm::vec3> vegetation;
 
 int main() {
 	stbi_set_flip_vertically_on_load(true);
-
 
 	Window window(800, 600);
 
@@ -331,7 +330,7 @@ int main() {
 	glEnableVertexAttribArray(2);
 	glVertexAttribDivisor(2, 1);
 
-	unsigned int amt = 100000;
+	unsigned int amt = 10000;
 	glm::mat4* modelMats = new glm::mat4[amt];
 	srand(glfwGetTime());
 	float rad = 50.0;
