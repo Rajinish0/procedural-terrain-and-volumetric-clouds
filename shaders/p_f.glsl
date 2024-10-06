@@ -4,7 +4,7 @@ in vec3 col;
 out vec4 fragcol;
 
 const vec3 skycolor = vec3(0.86f, 0.82f, 0.78f);
-const float maxDist = 5.0f;
+const float maxDist = 10.0f;
 
 in vec2 tCoord;
 in float dist;
@@ -30,7 +30,7 @@ void main(){
     float alpha = d/maxDist;
     vec3 tempcol = (1-alpha)*tCol + (alpha)*skycolor;
 
-    fragcol = vec4(tCol, 1.0f);
+    fragcol = vec4(tempcol, 1.0f);
     // fragcol = vec4(col, 1.0f);
     // fragcol = vec4(1.0f, 0.5f, 0.0f, 1.0f);
 }

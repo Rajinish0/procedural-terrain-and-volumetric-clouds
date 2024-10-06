@@ -152,6 +152,8 @@ unsigned int texture, texture2,
 grassTexture, fbtexture;
 float dt = 0.007f;
 float lastTime = NULL;
+float moveFac = 0.0f;
+float moveVel = 0.015f;
 // float xOff = 0.0f, yOff = 0.0f;
 
 Camera cam;
@@ -159,6 +161,8 @@ std::vector<glm::vec3> vegetation;
 Perlin2d perlin(256, 8);
 Plane *plane;
 Terrain *terr;
+
+float terrainSize = 10.0f;
 
 unsigned int FBO, RBO, textureId;
 
@@ -227,7 +231,8 @@ int main() {
 	Shader shader{"shaders/p_v.glsl", "shaders/p_f.glsl"};
 	Shader shader2{"shaders/q_v.glsl", "shaders/q_f.glsl"};
 	Shader shader3{"shaders/w_v.glsl", "shaders/w_f.glsl"};
-	terr = new Terrain{100, 3.0f, shader};
+	terr = new Terrain{100, terrainSize, shader};
+	Texture dudv{"textures/dudv.png", Texture::DIFFUSE, GL_REPEAT, GL_REPEAT};
 	plane = new Plane;
 
 	glEnable(GL_DEPTH_TEST);
@@ -286,18 +291,25 @@ int main() {
 		shader3.setMatrix("proj", proj);
 		shader3.setMatrix("view", cam.getView());
 		glm::mat4 m =glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, waterHeight, 0.0f));
-		glm::mat4 m2 =glm::scale(glm::mat4(1.0f), glm::vec3(3.0f));
+		glm::mat4 m2 =glm::scale(glm::mat4(1.0f), glm::vec3((terrainSize)/2.0f));
 		shader3.setMatrix("model", m*model*m2);
 
 		shader3.use();
 		shader3.setInt("t1", 0);
 		shader3.setInt("t2", 1);
+		shader3.setInt("dudv", 2);
+		shader3.setFloat("moveFac", moveFac);
+		shader3.setVec3("camPos", cam.position);
+		shader3.setVec3("planeNorm", glm::vec3(0.0f, 1.0f, 0.0f));
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, fb.textureId);
 
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, fb2.textureId);
+
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, dudv.id);
 
 		glBindVertexArray(plane->VAO);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -352,6 +364,9 @@ void processInput(GLFWwindow* window)
 	lastTime = cTime;
 	float xOff = 0.0f, yOff = 0.0f;
 
+	moveFac += moveVel * dt;
+	moveFac -= (int)moveFac;
+	
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
 

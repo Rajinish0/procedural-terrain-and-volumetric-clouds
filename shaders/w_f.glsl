@@ -2,15 +2,45 @@
 
 out vec4 fragcol;
 
+in vec4 worldPos;
 in vec4 finPos;
+in vec2 tCoord;
 
+
+uniform sampler2D dudv;
 uniform sampler2D t1;
 uniform sampler2D t2;
+uniform float moveFac;
+uniform vec3 planeNorm;
+uniform vec3 camPos;
 
+const float distortStrength = 0.05f;
 
 
 void main(){
-    vec2 tCoord = ((finPos/finPos.w).xy + 1)/2.0f;
-    fragcol = mix(texture(t1, vec2(tCoord.x, 1-tCoord.y)), texture(t2, tCoord), 0.5f);
+
+    vec2 distort = (texture(dudv, vec2(tCoord.x + moveFac, tCoord.y)).rg*2 - 1) * distortStrength;
+    vec2 distort2 = (texture(dudv, vec2(-tCoord.x + moveFac, tCoord.y + moveFac)).rg*2 - 1) * distortStrength;
+    vec2 distortT = distort + distort2;
+
+    vec3 diff = normalize(camPos - worldPos.xyz);
+    float d = max(dot(planeNorm, diff), 0.0f);
+
+    
+    vec2 tC = ((finPos/finPos.w).xy + 1.0f)/2.0f;
+    vec2 reflect_c = vec2(tC.x, 1-tC.y);
+    vec2 refrect_c = tC;
+
+    reflect_c += distortT;
+    refrect_c += distortT;
+
+    reflect_c = clamp(reflect_c, 0.001, 0.999);
+    refrect_c = clamp(refrect_c, 0.001, 0.999);
+
+
+    // fragcol = texture(t1, reflect_c);
+    fragcol = mix(texture(t1, reflect_c), texture(t2, refrect_c), d);
+    // fragcol = texture(t2, refrect_c);
+    fragcol = mix(fragcol, vec4(0.0, 0.3, 0.5, 1.0), 0.2);
     // fragcol = vec4(0.0f, 0.0f, 1.0f, 1.0f);
 }
