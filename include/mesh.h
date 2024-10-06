@@ -19,16 +19,24 @@ struct Vertex {
 };
 
 struct Texture {
+	enum Type{
+		DIFFUSE,
+		SPECULAR
+	};
 	unsigned int id;
-	std::string type;
+	Type type;
 	std::string path;
 
 	Texture() 
 		:id(0) {};
-	Texture(unsigned int id, std::string type, std::string path)
+	Texture(unsigned int id, Type type, std::string path)
 		:id(id), type(type), path(path) {}
-	Texture(std::string path, std::string directory, std::string type);
-	Texture(std::string completePath, std::string type);
+	Texture(std::string path, std::string directory, Type type, 
+			GLuint S_WRAP = GL_REPEAT, 
+			GLuint T_WRAP = GL_REPEAT);
+	Texture(std::string completePath, Type type,
+			GLuint S_WRAP = GL_REPEAT, 
+			GLuint T_WRAP = GL_REPEAT);
 };
 
 
@@ -39,11 +47,20 @@ public:
 	std::vector<unsigned int> indicies;
 	
 	Mesh(std::vector<Vertex> verticies, std::vector<Texture> textures, std::vector<unsigned int> indicies);
+	Mesh(Mesh&&) noexcept;
+
+	Mesh(const Mesh&) = default;
+	Mesh& operator=(const Mesh&) = default;
+
+	Mesh& operator=(Mesh&&) noexcept;
 	void draw(Shader& shader);
 	unsigned int VAO, VBO, EBO;
 
+	// ~Mesh();
+
 private:
 	void setUpMesh();
+	void clearResources();
 };
 
 #endif
