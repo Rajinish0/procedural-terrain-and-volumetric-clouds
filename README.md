@@ -1,1 +1,1 @@
-Just a starting point for opengl projects. The external libs were compiled using cmake for MinGW.
+The xOff, yOff for perlin noise can be changed using the 'i, j, k, l' keys which changes the terrain. 
