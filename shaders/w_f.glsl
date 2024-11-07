@@ -5,7 +5,9 @@ out vec4 fragcol;
 in vec4 worldPos;
 in vec4 finPos;
 in vec2 tCoord;
+in float distFromCamera;
 
+const vec3 skycolor = vec3(0.86f, 0.82f, 0.78f);
 
 uniform sampler2D dudv;
 uniform sampler2D t1;
@@ -15,6 +17,7 @@ uniform vec3 planeNorm;
 uniform vec3 camPos;
 
 const float distortStrength = 0.05f;
+const float maxDist = 20.0f;
 
 
 void main(){
@@ -36,11 +39,15 @@ void main(){
 
     reflect_c = clamp(reflect_c, 0.001, 0.999);
     refrect_c = clamp(refrect_c, 0.001, 0.999);
+    float di = min(distFromCamera, maxDist);
+    float alpha = di / maxDist;
 
 
-    // fragcol = texture(t1, reflect_c);
-    fragcol = mix(texture(t1, reflect_c), texture(t2, refrect_c), d);
-    // fragcol = texture(t2, refrect_c);
-    fragcol = mix(fragcol, vec4(0.0, 0.3, 0.5, 1.0), 0.2);
-    // fragcol = vec4(0.0f, 0.0f, 1.0f, 1.0f);
+    // fragcol = mix(texture(t1, reflect_c), texture(t2, refrect_c), d);
+    // fragcol = mix(fragcol, vec4(0.0, 0.3, 0.5, 1.0), 0.2);
+    vec3 tempcol = mix(texture(t1, reflect_c), texture(t2, refrect_c), d).xyz;
+    tempcol = mix(tempcol, vec3(0.0, 0.3, 0.5), 0.2);
+    tempcol = mix(tempcol, skycolor, alpha);
+    // tempcol = (1-alpha)*tempcol + alpha*skycolor;
+    fragcol = vec4(tempcol, 1.0f);
 }

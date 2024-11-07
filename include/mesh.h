@@ -9,6 +9,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include "g_types.h"
 
 
 struct Vertex {
@@ -38,7 +39,6 @@ struct Texture {
 			GLuint S_WRAP = GL_REPEAT, 
 			GLuint T_WRAP = GL_REPEAT);
 };
-
 
 class Mesh {
 public:

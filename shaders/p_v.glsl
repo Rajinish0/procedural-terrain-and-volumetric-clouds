@@ -4,7 +4,7 @@ layout (location =0) in vec3 aPos;
 layout (location =1) in vec3 normal;
 layout (location =2) in vec2 texCoord;
 
-// uniform float[100*100] zCoords;
+// uniform float[10000] zCoords;
 
 uniform sampler1D zCoordsTexture;
 
@@ -24,7 +24,8 @@ void main(){
     vec4 worldPos = model*vec4(aPos.x, aPos.y, z, 1.0);
     gl_ClipDistance[0] = dot(worldPos, planeNorm);
     vec4 viewPos = view * worldPos;
-    dist = abs(viewPos.z);
+    // dist = abs(viewPos.z);
+    dist = length(viewPos.xyz);
     gl_Position = proj*viewPos;
     tCoord = texCoord;
 }

@@ -278,6 +278,54 @@ namespace funcs{
 		return Mesh(vertices, textures, indices);
 	}
 
+	Mesh genPlane2(int size, int LOD){
+		std::vector<Vertex> vertices;
+		std::vector<Texture> textures;
+		std::vector<unsigned int> indicies;
+
+		float tlX = (size - 1)/-2.0f;
+		float tlY = (size - 1)/2.0f;
+
+		int sz = (size - 1) / LOD  + 1;
+		std::cout << "SZ: " << sz << std::endl;
+
+		float x, y;
+
+		for (unsigned int i =0; i < size; i+=LOD){
+			for (unsigned int j =0; j < size; j+=LOD){
+				Vertex v;
+				// std::cout << perlin.perlin(j, i) << std::endl;
+				x = (tlX + (float)j)/(float(size));
+				y = (tlY - (float)i)/(float(size));
+				v.position = glm::vec3(tlX + (float)j, 0.0f, tlY - (float)i);
+				v.normal   = glm::vec3(0.0f, 0.0f, 1.0f);
+				v.texCoord = glm::vec2( ( (float) j )/ ( (float)(size - 1)) , ( (float) (i) ) / ( (float) (size - 1) ) );
+
+				// std::cout << v.position.x << ", " << v.position.y << std::endl;
+				vertices.push_back(v);
+
+				// if (i < sz -1 && j < sz - 1){
+
+				// }
+			}
+		}
+
+		for (int i =0; i < sz - 1; ++i){
+			for (int j =0; j < sz - 1; ++j){
+				indicies.push_back(funcs::flatten(i, j, sz));
+				indicies.push_back(funcs::flatten(i, j + 1, sz));
+				indicies.push_back(funcs::flatten(i + 1, j, sz));
+
+				indicies.push_back(funcs::flatten(i, j + 1, sz));
+				indicies.push_back(funcs::flatten(i + 1, j, sz));
+				indicies.push_back(funcs::flatten(i + 1, j + 1, sz));
+			}
+		}
+
+		return Mesh(vertices, textures, indicies);
+	}
+
+
 	size_t flatten(size_t i, size_t j, size_t width){
 		return (j + i * width);
 	}

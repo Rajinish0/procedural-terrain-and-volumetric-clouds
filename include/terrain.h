@@ -26,7 +26,7 @@ struct Terrain{
         "textures/mud.png", 
         "textures/grassflowers.png",
         "textures/pavement.jpg"))),
-        shader(shader), perlin(), xOff(1.0f), yOff(0.0f),
+        shader(shader), perlin(256, 8), xOff(1.0f), yOff(0.0f),
         blendMap("textures/blendmap.png", Texture::DIFFUSE)
         {
             zCoords = std::vector<float>(numBlocks*numBlocks);
@@ -40,13 +40,14 @@ struct Terrain{
               starty =  blockSize / 2.0f,
               x, y;
 
+        shader.use();
         for (int i =0; i < numBlocks; ++i){
             for (int j =0; j < numBlocks; ++j){
                 x = startx + bsz *j; 
                 y = starty - bsz *i;
                 zCoords[funcs::flatten(i, j, numBlocks)] = 
-                        perlin.perlin((xOff + x + blockSize / 2.0f)/2.0f, 
-                                      (yOff + y - blockSize / 2.0f)/2.0f);
+                        std::max(-0.4f, perlin.perlin((xOff + x + blockSize / 2.0f)/4.0f, 
+                                      (yOff + y - blockSize / 2.0f)/4.0f));
             }
         }
 
@@ -56,10 +57,11 @@ struct Terrain{
 		glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-        shader.use(); shader.setInt("zCoordsTexture", 0);
+        shader.use();
+        shader.setInt("zCoordsTexture", 5);
         shader.setInt("numVerts", numBlocks * numBlocks);
         shader.setInt("blendMap", 4);
-        shader.setFloat("tStretch", 20.0f);
+        shader.setFloat("tStretch", 40.0f);
         glBindTexture(GL_TEXTURE_1D, 0);
     }
 
@@ -70,6 +72,7 @@ struct Terrain{
     }
 
     void draw(){
+        glActiveTexture(GL_TEXTURE5);
         glBindTexture(GL_TEXTURE_1D, zCoordsTexture);
         glActiveTexture(GL_TEXTURE4);
         glBindTexture(GL_TEXTURE_2D, blendMap.id);

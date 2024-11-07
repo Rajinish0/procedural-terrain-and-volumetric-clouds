@@ -72,7 +72,7 @@ namespace funcs {
 
 		return Mesh(vertices, textures, indices);
 	}
-
+	Mesh genPlane2(int size, int LOD);
 
 }
 

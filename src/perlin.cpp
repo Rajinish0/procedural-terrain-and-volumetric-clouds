@@ -28,7 +28,7 @@ float Perlin1d::perlin(float x) {
 	float out = 0;
 	for (int i = 0; i < octaves; ++i)
 		out += (1.0f / (1 << i)) * noise(x * (1 << i));
-	return std::min(std::max(out, -0.5f), 0.4f);
+	return std::min(std::max(out, 0.0f), 1.0f);
 }
 
 Perlin1d::~Perlin1d() {
@@ -229,7 +229,7 @@ float Perlin2d::perlin(float x, float y) {
 		a *= 2;
 	}
 	//out += (1.0f/(1 << i))*noise(x * (1 << i), y * (1 << i) );
-	return std::min(std::max(out, -1.0f), 1.0f);
+	return std::min(std::max(out, 0.0f), 1.0f);
 }
 
 Perlin2d::~Perlin2d() {

@@ -23,6 +23,7 @@
 #include "audio_manager.h"
 #include "terrain.h"
 #include "framebuffer.h"
+#include "endless_terrain.h"
 #include <ft2build.h> // checking if build was good
 
 
@@ -158,7 +159,7 @@ float moveVel = 0.015f;
 
 Camera cam;
 std::vector<glm::vec3> vegetation;
-Perlin2d perlin(256, 8);
+Perlin2d perlin(256, 4);
 Plane *plane;
 Terrain *terr;
 
@@ -167,7 +168,80 @@ float terrainSize = 10.0f;
 unsigned int FBO, RBO, textureId;
 
 
+// Perlin2d perlin(256, 8);
+
+// Mesh genPlane(int size, std::vector<float> heightmap){
+// 	std::vector<Vertex> vertices;
+// 	std::vector<Texture> textures;
+// 	std::vector<unsigned int> indicies;
+
+// 	float tlX = (size - 1)/-2.0f;
+// 	float tlY = (size - 1)/2.0f;
+
+// 	int LOD = 1;
+// 	int sz = (size - 1) / LOD  + 1;
+// 	std::cout << "SZ: " << sz << std::endl;
+
+// 	float x, y;
+
+// 	for (unsigned int i =0; i < size; i+=LOD){
+// 		for (unsigned int j =0; j < size; j+=LOD){
+// 			Vertex v;
+// 			// std::cout << perlin.perlin(j, i) << std::endl;
+// 			x = (tlX + (float)j)/(float(size));
+// 			y = (tlY - (float)i)/(float(size));
+// 			v.position = glm::vec3(tlX + (float)j, heightmap[i*size + j], tlY - (float)i);
+// 			v.normal   = glm::vec3(0.0f, 0.0f, 1.0f);
+// 			v.texCoord = glm::vec2( ( (float) j )/ ( (float)(size - 1)) , ( (float) (i) ) / ( (float) (size - 1) ) );
+
+// 			// std::cout << v.position.x << ", " << v.position.y << std::endl;
+// 			vertices.push_back(v);
+
+// 			// if (i < sz -1 && j < sz - 1){
+
+// 			// }
+// 		}
+// 	}
+
+// 	for (int i =0; i < sz - 1; ++i){
+// 		for (int j =0; j < sz - 1; ++j){
+// 			indicies.push_back(funcs::flatten(i, j, sz));
+// 			indicies.push_back(funcs::flatten(i, j + 1, sz));
+// 			indicies.push_back(funcs::flatten(i + 1, j, sz));
+
+// 			indicies.push_back(funcs::flatten(i, j + 1, sz));
+// 			indicies.push_back(funcs::flatten(i + 1, j, sz));
+// 			indicies.push_back(funcs::flatten(i + 1, j + 1, sz));
+// 		}
+// 	}
+
+// 	return Mesh(vertices, textures, indicies);
+// }
+
+
+// std::vector<float> generateHeightData(unsigned int size, glm::vec2 center = glm::vec2(0.0f)){
+// 	// Perlin2d perlin;
+// 	std::vector<float> v;
+// 	float tlX = (size - 1)/-2.0f;
+// 	float tlY = (size - 1)/2.0f;
+// 	float x, y;
+// 	float scale = 0.1f;
+// 	for (unsigned int i =0; i < size; ++i){
+// 		for (unsigned int j =0; j < size; ++j){
+// 			x = (center.x + tlX + (float)j) * scale;
+// 			y = (center.y + tlY - (float)i) * scale;
+// 			float p = perlin.perlin(x, y) ;
+// 			// std::cout << p << std::endl;
+// 			v.push_back(p);
+// 		}
+// 	}
+
+// 	return v;
+// }
+
+
 int main() {
+	// std::srand(42);
 	stbi_set_flip_vertically_on_load(true);
 
 	Window window(800, 600);
@@ -198,149 +272,99 @@ int main() {
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
-	FrameBuffer fb;
-	FrameBuffer fb2;
-
-	// glGenFramebuffers(1, &FBO);
-	// glGenRenderbuffers(1, &RBO);
-
-
-	// glBindFramebuffer(GL_FRAMEBUFFER, FBO);
-
-	// glGenTextures(1, &textureId);
-	// glBindTexture(GL_TEXTURE_2D, textureId);
-	// glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 800, 600, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-	// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	// glBindTexture(GL_TEXTURE_2D, 0);
-	// glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureId, 0);
-
-	// glBindRenderbuffer(GL_RENDERBUFFER, RBO);
-	// glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 800, 600);
-	// glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
-	// glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, RBO);
-	// if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-	// 	std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
-
-
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-
+	
 	Shader shader{"shaders/p_v.glsl", "shaders/p_f.glsl"};
 	Shader shader2{"shaders/q_v.glsl", "shaders/q_f.glsl"};
 	Shader shader3{"shaders/w_v.glsl", "shaders/w_f.glsl"};
-	terr = new Terrain{100, terrainSize, shader};
-	Texture dudv{"textures/dudv.png", Texture::DIFFUSE, GL_REPEAT, GL_REPEAT};
-	plane = new Plane;
+	Shader shader4{"shaders/e_v.glsl", "shaders/e_f.glsl"};
 
 	glEnable(GL_DEPTH_TEST);
 	glm::mat4 proj(1.0f);
 	proj = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 200.0f);
 	float waterHeight = -0.2f;
 
+	EndlessTerrain terr(cam);
+
+
+	// unsigned int size = 241;
+	// unsigned int chunkSize = size - 1;
+	// std::vector<float> heightData = generateHeightData(size); // Use Perlin noise or another noise function
+	// std::vector<float> heightData2 = generateHeightData(size, glm::vec2(0.0f, (float)chunkSize));
+	// Mesh p = genPlane(size, heightData); 
+	// Mesh p2 = genPlane(size, heightData2);
+
+	// shader4.use();
+	// shader4.setMatrix("proj", proj);
+
+	// float tlX = (size - 1)/-2.0f;
+	// float tlY = (size - 1)/2.0f;
+
+	// shader4.setVec2("offset", glm::vec2(-tlX, tlY));
+
+	// GLuint heightmapTexture;
+	// glGenTextures(1, &heightmapTexture);
+	// glBindTexture(GL_TEXTURE_2D, heightmapTexture);
+	// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	// // Generate or load heightmap data (here we're assuming grayscale data)
+	// glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, size, size, 0, GL_RED, GL_FLOAT, heightData.data());
+	// glGenerateMipmap(GL_TEXTURE_2D);
+
+
+	// GLuint heightmapTexture2;
+	// glGenTextures(1, &heightmapTexture2);
+	// glBindTexture(GL_TEXTURE_2D, heightmapTexture2);
+	// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	// // Generate or load heightmap data (here we're assuming grayscale data)
+	// glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, size, size, 0, GL_RED, GL_FLOAT, heightData2.data());
+	// glGenerateMipmap(GL_TEXTURE_2D);
+
 	while (!window.shouldClose())
 	{
 		processInput(window.window);
 
-		glEnable(GL_CLIP_DISTANCE0);
+		// glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
 
-		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -2.0f));
-		model = glm::rotate(
-			model, glm::radians(-90.0f),
-			glm::vec3(1.0f, 0.0f, 0.0f));
-		shader.use();
-
-		shader.setMatrix("proj", proj);
-		shader.setMatrix("model", model);
-		//reflection
-		float offSet = 2*(cam.position.y - waterHeight);
-		cam.position = glm::vec3(cam.position.x, 
-								 cam.position.y - offSet,
-								 cam.position.z);//cam.position.y -= offSet;
-		cam.pitch = -cam.pitch;
-		cam.updateDirection();
-		shader.setMatrix("view", cam.getView());
-		shader.setVec4("planeNorm", glm::vec4(0.0f, 1.0f, 0.0f, -waterHeight));
-		// glBindFramebuffer(GL_FRAMEBUFFER, FBO);
-		fb.Bind();
-		terr->draw();
-		fb.unBind();
-
-		cam.position = glm::vec3(cam.position.x, 
-								 cam.position.y + offSet,
-								 cam.position.z);
-		cam.pitch = -cam.pitch;
-		cam.updateDirection();
-		shader.setMatrix("view", cam.getView());
-
-		//refraction
-		shader.setVec4("planeNorm", glm::vec4(0.0f,-1.0f, 0.0f, -waterHeight));
-		fb2.Bind();
-		terr->draw();
-		fb2.unBind();
-
-		
-		// glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glClearColor(0.86f, 0.82f, 0.78f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glEnable(GL_DEPTH_TEST);
-		glDisable(GL_CLIP_DISTANCE0);
-		shader3.use();
-		shader3.setMatrix("proj", proj);
-		shader3.setMatrix("view", cam.getView());
-		glm::mat4 m =glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, waterHeight, 0.0f));
-		glm::mat4 m2 =glm::scale(glm::mat4(1.0f), glm::vec3((terrainSize)/2.0f));
-		shader3.setMatrix("model", m*model*m2);
-
-		shader3.use();
-		shader3.setInt("t1", 0);
-		shader3.setInt("t2", 1);
-		shader3.setInt("dudv", 2);
-		shader3.setFloat("moveFac", moveFac);
-		shader3.setVec3("camPos", cam.position);
-		shader3.setVec3("planeNorm", glm::vec3(0.0f, 1.0f, 0.0f));
-
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, fb.textureId);
-
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, fb2.textureId);
-
-		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D, dudv.id);
-
-		glBindVertexArray(plane->VAO);
-		glDrawArrays(GL_TRIANGLES, 0, 6);
-		glBindVertexArray(0);
-
-		terr->draw();
-		// plane->draw(shader3, fb.textureId);
-
-		// shader2.use();
-		// shader2.setFloat("xOff",-0.7f);
-		// shader2.setFloat("yOff", 0.4f);
-		// fb.draw(shader2);
-
-		// shader2.setFloat("xOff", 0.7f);
-		// // shader2.setFloat("yOff", 0.4f);
-		// fb2.draw(shader2);
-
-		// shader2.use();
-		// glBindVertexArray(quadVAO);
-		// glDisable(GL_DEPTH_TEST);
+		shader4.use();
+		shader4.setMatrix("proj", proj);
+		shader4.setMatrix("view", cam.getView());
+		terr.draw(shader4);
+		// shader4.use();
+		// shader4.setInt("heightMap", 0);
 		// glActiveTexture(GL_TEXTURE0);
-		// glBindTexture(GL_TEXTURE_2D, textureId);
-		// glDrawArrays(GL_TRIANGLES, 0, 6);
-		// glBindTexture(GL_TEXTURE_2D, 0);
-		// glBindVertexArray(0);
+		// glBindTexture(GL_TEXTURE_2D, heightmapTexture);
+		// shader4.setMatrix("view", cam.getView());
+		// shader4.setMatrix("model", glm::scale(glm::mat4(1.0f), glm::vec3(10.f/float(chunkSize))));
+		// p.draw(shader4);
+
+		// // glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, size, size, 0, GL_RED, GL_FLOAT, heightData2.data());
+		// // glGenerateMipmap(GL_TEXTURE_2D);
+
+		// glm::mat4 model(1.0f);
+		// model = glm::translate(model, glm::vec3(0.0f, 0.0f, 10.0f));
+		// model = glm::scale(model, glm::vec3(10.f/float(chunkSize)));
+
+		// shader4.setMatrix("model", model);
+		// shader4.setInt("heightMap", 0);
+		// glActiveTexture(GL_TEXTURE0);
+		// glBindTexture(GL_TEXTURE_2D, heightmapTexture2);
+		// p2.draw(shader4);
 
 		window.update();
-
 	}
-	delete terr;
-	delete plane;
+	// delete terr;
+	// delete plane;
 	glfwTerminate();
 	return 0;
 }
@@ -372,22 +396,22 @@ void processInput(GLFWwindow* window)
 
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS){
 		// yOff += 0.001f;
-		cam.move(Camera::UP, 0.10f*dt);
+		cam.move(Camera::UP, 0.50f*dt);
 	}
 
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS){
 		// yOff -= 0.001f;
-		cam.move(Camera::DOWN, 0.10f*dt);
+		cam.move(Camera::DOWN, 0.50f*dt);
 	}
 
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS){
-		cam.move(Camera::RIGHT, 0.10f*dt);
+		cam.move(Camera::RIGHT, 0.50f*dt);
 		// xOff += 0.001f;
 	}	
 
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS){
 		// xOff -= 0.001f;
-		cam.move(Camera::LEFT, 0.10f*dt);
+		cam.move(Camera::LEFT, 0.50f*dt);
 	}
 
 
