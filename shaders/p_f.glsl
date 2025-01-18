@@ -39,6 +39,7 @@ void main(){
     // vec3 tempcol = applyFog(tCol, d);
 
     fragcol = vec4(tempcol, 1.0f);
+	//fragcol = vec4(tCol, 1.0f);
     // fragcol = vec4(col, 1.0f);
     // fragcol = vec4(1.0f, 0.5f, 0.0f, 1.0f);
 }

@@ -3,7 +3,9 @@
 
 #include <vector>
 #include <string>
-#include "mesh.h"
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 class HeightMapWrapper;
 
@@ -14,6 +16,7 @@ namespace Types{
     using INT_VEC    = std::vector<int>;
     using FLOAT_VEC  = std::vector<float>;
     using CHAR_VEC   = std::vector<char>;
+    using VEC3_VEC   = std::vector<glm::vec3>;
     // using MESH_VEC   = std::vector<Mesh>;
     using IIPAIR     = std::pair<int, int>;
 }

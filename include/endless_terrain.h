@@ -24,10 +24,78 @@ const float SCALE = 10.0f;
 //     FLOAT_VEC normals;
 // };
 
+struct _chunkData{
+    FLOAT_VEC heights;
+    VEC3_VEC  normals;
+
+    _chunkData(FLOAT_VEC heights, VEC3_VEC normals)
+        :heights(heights), normals(normals){}
+
+};
+
+
+_chunkData generateChunkData(UI size, glm::vec2 center = glm::vec2(0.0f)){
+    _chunkData data(FLOAT_VEC((size + 1) * (size + 1)), VEC3_VEC(size * size));
+    FLOAT_VEC v( (size + 1) * (size + 1)  );
+	float tlX = (size - 1)/-2.0f;
+	float tlY = (size - 1)/2.0f;
+	float x, y;
+	float scale = 10.0f/chunkSize;
+    Perlin2d perlin;
+	for (unsigned int i =0; i < size + 1; ++i){
+		for (unsigned int j =0; j < size + 1; ++j){
+            // if (j == size)
+                // x = (center.x + chunkSize + tlX) * scale;
+            // else
+         	x = (center.x + tlX + (float)j) * scale;
+			y = (center.y + tlY - (float)i) * scale;
+			float p = perlin.perlin(x, y) ;
+            v[funcs::flatten(i, j, size + 1)] = p;
+            // if (i != size && j != size)
+     		data.heights[funcs::flatten(i, j, size + 1)] = p;
+		}
+	}
+
+    auto vFunc = [size](int i, int j) -> UI{return funcs::flatten(i, j, size+1);};
+
+    for (UI i =0; i < size; ++i){
+        for (UI j =0; j < size; ++j){
+            float height = v[ vFunc(i, j) ];
+            float height_dx = v[ vFunc(i, j + 1) ];
+            float height_dy = v[ vFunc(i + 1, j) ];
+            // data.heights[funcs::flatten(i, j, size)] = height;
+
+
+
+            glm::vec3 v1 = glm::vec3((center.x + tlX + (float)j) * scale,  height * 15.0f, (center.y + tlY - (float)i) * scale);
+            glm::vec3 v2 = glm::vec3((center.x + tlX + (float)(j+1)) * scale,  height_dx * 15.0f, (center.y + tlY - (float)i) * scale );
+            glm::vec3 v3 = glm::vec3((center.x + tlX + (float)j) * scale, height_dy * 15.0f, (center.y + tlY - (float)(i+1)) * scale  );
+
+            glm::vec3 dx = v2 - v1;
+            glm::vec3 dy = v3 - v1;
+
+            glm::vec3 n = glm::normalize(glm::cross(dy, dx));
+            data.normals[funcs::flatten(i, j, size)] = n;
+
+        } 
+    }
+    return data;
+}
+
 
 FLOAT_VEC generateHeightData(UI size, glm::vec2 center = glm::vec2(0.0f)){
 	Perlin2d perlin;
 	FLOAT_VEC v(size * size);
+
+    /*
+     TO DO:
+        create a padded mesh s.t the edges are only used for normal calculation
+        the normals should be passed via a texture to the shader
+        FLOAT_VEC normal_vecs(size * size);
+
+        this should help remove the line b/w the chunks
+    */
+
     // FLOAT_VEC normals(size * size);
 	float tlX = (size - 1)/-2.0f;
 	float tlY = (size - 1)/2.0f;
@@ -45,7 +113,9 @@ FLOAT_VEC generateHeightData(UI size, glm::vec2 center = glm::vec2(0.0f)){
 			x = (center.x + tlX + (float)j) * scale;
 			y = (center.y + tlY - (float)i) * scale;
 			float p = perlin.perlin(x, y) ;
-			// std::cout << p << std::endl;
+            // glm::vec3 v1 (i, p, j);
+            // glm::vec3 v2 (i + 1, )
+			// // std::cout << p << std::endl;
 			v[funcs::flatten(i, j, size)] = p;
 		}
 	}
@@ -55,6 +125,10 @@ FLOAT_VEC generateHeightData(UI size, glm::vec2 center = glm::vec2(0.0f)){
 
 
 void requestHeightData(UI size, glm::vec2 center, std::function<void(FLOAT_VEC)> callback){
+    /*
+    TO DO:
+        change generateHeightData to generateChunkData
+    */
     std::thread([=](){
         FLOAT_VEC v = generateHeightData(size, center);
         callback(v);
@@ -62,16 +136,43 @@ void requestHeightData(UI size, glm::vec2 center, std::function<void(FLOAT_VEC)>
     ).detach();
 }
 
+void requestChunkData(UI size, glm::vec2 center, std::function<void(_chunkData)> callback){
+    std::thread([=](){
+        _chunkData data = generateChunkData(size, center);
+        callback(data);
+    }
+    ).detach();
+}
+
+
 class HeightMapWrapper{
 
 public:
     GLuint texture;
+    GLuint normalTexture;
     glm::vec2 center;
+
+    // HeightMapWrapper(UI size, glm::vec2 center)
+    //     :size(size), center(center){
+    //     glGenTextures(1, &texture);
+    //     requestHeightData(size, center, [this](FLOAT_VEC v){onDataRecv(v);});
+    // }
 
     HeightMapWrapper(UI size, glm::vec2 center)
         :size(size), center(center){
-        glGenTextures(1, &texture);
-        requestHeightData(size, center, [this](FLOAT_VEC v){onDataRecv(v);});
+            glGenTextures(1, &texture);
+            requestChunkData(size, center, [this](_chunkData d){onDataRecv(d);});
+        }
+
+    /*
+    TO DO:
+        recv chunkData instead of vec
+    */
+
+    void onDataRecv(_chunkData d){
+        this->v = std::move(d.heights);
+        this->normals = std::move(d.normals);
+        dataReceived = true;
     }
 
     void onDataRecv(FLOAT_VEC v){
@@ -91,7 +192,16 @@ public:
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, size, size, 0, GL_RED, GL_FLOAT, v.data());
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, (size + 1), (size + 1), 0, GL_RED, GL_FLOAT, v.data());
+        glGenerateMipmap(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+        glBindTexture(GL_TEXTURE_2D, normalTexture);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, size, size, 0, GL_RGB, GL_FLOAT, normals.data());
         glGenerateMipmap(GL_TEXTURE_2D);
         glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -110,8 +220,11 @@ public:
     }
 
     void bind(int num = 0){
-        glActiveTexture(GL_TEXTURE0 + num);
+        glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture);
+
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, normalTexture);
     }
 
 
@@ -119,6 +232,7 @@ private:
     bool isReady = false;
     bool dataReceived = false;
     FLOAT_VEC v;
+    VEC3_VEC normals;
     UI size;
     float scale;
 };
@@ -157,14 +271,15 @@ public:
         // LODMeshes[0].draw(shader);
 // Assuming scale is defined and player.position is a glm::vec3 or similar
 // float scale = /* your scale value */;
+        // size = 
         int gridSize = scale / 2.0f; // Size of each grid cell in terms of player coordinates
 
         int x = std::floor((player.position.x + gridSize) / scale);
         int y = std::floor((player.position.z + gridSize) / scale);
 
-        // std::cout << "Px: " << player.position.x << " Py: " 
-        //           << player.position.z << " x: " << x 
-        //           << " y: " << y << std::endl;;
+    //    std::cout << "Px: " << player.position.x << " Py: " 
+    //              << player.position.z << " x: " << x 
+    //              << " y: " << y << std::endl;;
         for (int di =-1; di <=1; ++di){
             for (int dj =-1; dj <=1; ++dj){
                 int ni = y + di,
@@ -184,6 +299,7 @@ public:
                     model = glm::scale(model, glm::vec3(scale/float(chunkSize)));
                     shader.setMatrix("model", model);
                     shader.setInt("heightMap", 0);
+                    shader.setInt("normalMap", 1);
                     chunk->bind();
                     LODMeshes[0].draw(shader);
                 // m1.draw(shader);
@@ -197,6 +313,10 @@ private:
     Camera& player;
     UI size, chunkSize; 
     // MeshTypes::PAIR_HEIGHT_MAP history;
+    /*
+    TO DO:
+        use LRUCache with capacity ~ 100 for history
+    */
     E_T_TYPES::PAIR_HEIGHT_MAP history;
     float scale;
 };

@@ -297,6 +297,7 @@ namespace funcs{
 				// std::cout << perlin.perlin(j, i) << std::endl;
 				x = (tlX + (float)j)/(float(size));
 				y = (tlY - (float)i)/(float(size));
+				// std::cout << x << std::endl;
 				v.position = glm::vec3(tlX + (float)j, 0.0f, tlY - (float)i);
 				v.normal   = glm::vec3(0.0f, 0.0f, 1.0f);
 				v.texCoord = glm::vec2( ( (float) j )/ ( (float)(size - 1)) , ( (float) (i) ) / ( (float) (size - 1) ) );

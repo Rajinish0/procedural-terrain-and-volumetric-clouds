@@ -27,6 +27,9 @@
 #include <ft2build.h> // checking if build was good
 
 
+//#define DRAW_NORMALS
+
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
 void mouse_callback(GLFWwindow* window, double xPos, double yPos);
@@ -279,6 +282,7 @@ int main() {
 	Shader shader2{"shaders/q_v.glsl", "shaders/q_f.glsl"};
 	Shader shader3{"shaders/w_v.glsl", "shaders/w_f.glsl"};
 	Shader shader4{"shaders/e_v.glsl", "shaders/e_f.glsl"};
+	Shader shader5{"shaders/normal_viz_v.glsl", "shaders/normal_viz_f.glsl", "shaders/normal_viz.glsl"};
 
 	glEnable(GL_DEPTH_TEST);
 	glm::mat4 proj(1.0f);
@@ -286,6 +290,7 @@ int main() {
 	float waterHeight = -0.2f;
 
 	EndlessTerrain terr(cam);
+	FrameBuffer fbo;
 
 
 	// unsigned int size = 241;
@@ -334,12 +339,25 @@ int main() {
 
 		// glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
 
+		// fbo.Bind();
 		glClearColor(0.86f, 0.82f, 0.78f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		shader4.use();
 		shader4.setMatrix("proj", proj);
 		shader4.setMatrix("view", cam.getView());
 		terr.draw(shader4);
+
+		#ifdef DRAW_NORMALS
+		shader5.use();
+		shader5.setMatrix("proj", proj);
+		shader5.setMatrix("view", cam.getView());
+		terr.draw(shader5);
+		#endif
+		// fbo.unBind();
+
+		// fbo.draw();
+
+
 		// shader4.use();
 		// shader4.setInt("heightMap", 0);
 		// glActiveTexture(GL_TEXTURE0);
