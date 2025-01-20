@@ -160,6 +160,12 @@ float moveFac = 0.0f;
 float moveVel = 0.015f;
 // float xOff = 0.0f, yOff = 0.0f;
 
+float densityThreshold = .420003f;
+float scale 		   = .595005f;
+float weatherScale     = .0001;
+float higherScale 	   = .375008;
+glm::vec3 offSet(0.0f);
+
 Camera cam;
 std::vector<glm::vec3> vegetation;
 Perlin2d perlin(256, 4);
@@ -283,14 +289,24 @@ int main() {
 	Shader shader3{"shaders/w_v.glsl", "shaders/w_f.glsl"};
 	Shader shader4{"shaders/e_v.glsl", "shaders/e_f.glsl"};
 	Shader shader5{"shaders/normal_viz_v.glsl", "shaders/normal_viz_f.glsl", "shaders/normal_viz.glsl"};
+	Shader shader6{"shaders/quadV.glsl", "shaders/quadF.glsl"};
 
 	glEnable(GL_DEPTH_TEST);
 	glm::mat4 proj(1.0f);
-	proj = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 200.0f);
+	float near = .1f;
+	float far = 200.f;
+	proj = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, near, far);
 	float waterHeight = -0.2f;
 
 	EndlessTerrain terr(cam);
 	FrameBuffer fbo;
+
+
+	shader6.use();
+	shader6.setVec3("camPos", cam.position);
+	shader6.setFloat("near", near);
+	shader6.setFloat("far", far);
+	shader6.setMatrix("invProjMat", glm::inverse(proj));
 
 
 	// unsigned int size = 241;
@@ -333,15 +349,21 @@ int main() {
 	// glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, size, size, 0, GL_RED, GL_FLOAT, heightData2.data());
 	// glGenerateMipmap(GL_TEXTURE_2D);
 
+	// Plane plane;
+	GLuint ntId = funcs::genWorleyNoise(50, 50, 50);
+	GLuint weatherTextureId = funcs::loadWeatherData("weather_data.raw");
+	GLuint detailTextureId = funcs::loadDetailTexture("low_res.raw");
+
 	while (!window.shouldClose())
 	{
 		processInput(window.window);
 
 		// glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
 
-		// fbo.Bind();
 		glClearColor(0.86f, 0.82f, 0.78f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		fbo.Bind();
 		shader4.use();
 		shader4.setMatrix("proj", proj);
 		shader4.setMatrix("view", cam.getView());
@@ -353,9 +375,49 @@ int main() {
 		shader5.setMatrix("view", cam.getView());
 		terr.draw(shader5);
 		#endif
+		fbo.unBind();
+
+		shader6.use();
+		shader6.setMatrix(
+			"invViewMat",
+			glm::inverse(cam.getView())
+		);
+		shader6.setVec3("camPos", cam.position);
+		// shader6.setVec3("offSet", glm::vec3(
+		// 	0.0f, 
+		// 	0.0f,
+		// 	(float)glfwGetTime()
+		// ));
+		shader6.setInt("texture_clouds", 2);
+		shader6.setInt("weather_data", 3);
+		shader6.setInt("detailTexture", 4);
+		shader6.setFloat("densityThreshold", densityThreshold);
+		shader6.setFloat("scale", scale);
+		shader6.setFloat("weatherScale", weatherScale);
+		shader6.setFloat("higherScale", higherScale);
+		shader6.setVec3("offSet", glm::vec3(
+			cam.position.x, 
+			0.0,
+			cam.position.z
+		));
+		shader6.setVec3("bounding_rect.pos", glm::vec3(cam.position.x, 45.5f, cam.position.z));
+		shader6.setVec3("bounding_rect.dims", glm::vec3(300.0f, 100.0f, 300.0f));
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_3D, ntId);
+		glActiveTexture(GL_TEXTURE3);
+		glBindTexture(GL_TEXTURE_2D, weatherTextureId);
+		glActiveTexture(GL_TEXTURE4);
+		glBindTexture(GL_TEXTURE_3D, detailTextureId);
+		fbo.draw(shader6);
+
+		// fbo.Bind();
 		// fbo.unBind();
 
-		// fbo.draw();
+		// plane.draw(shader6, 0, 0);
+		// glBindVertexArray(quadVAO);
+		// shader6.use();
+		// glDrawArrays(GL_TRIANGLES, 0, 6);
+		// glBindVertexArray(0);
 
 
 		// shader4.use();
@@ -433,24 +495,36 @@ void processInput(GLFWwindow* window)
 	}
 
 
-	if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS){
-		yOff += 0.001f;
-	}
+	if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
+		densityThreshold += 0.01f;
+	
+	if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS)
+		densityThreshold -= 0.01f;
 
-	if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS){
-		yOff -= 0.001f;
-	}
+	if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS)
+		scale += 0.01f;
+	
+	if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS)
+		scale -= 0.01f;
 
-	if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS){
-		xOff += 0.001f;
-	}	
+	// if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS){
+	// 	yOff += 0.001f;
+	// }
 
-	if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS){
-		xOff -= 0.001f;
-	}
+	// if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS){
+	// 	yOff -= 0.001f;
+	// }
+
+	// if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS){
+	// 	xOff += 0.001f;
+	// }	
+
+	// if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS){
+	// 	xOff -= 0.001f;
+	// }
 
 
-	terr->move(xOff, yOff);
+	// terr->move(xOff, yOff);
 
 	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
 		cam.yaw -= cam.sensitivity*dt*100;
@@ -476,5 +550,5 @@ void processInput(GLFWwindow* window)
 }
 
 void mouse_callback(GLFWwindow* window, double xPos, double yPos) {
-	cam.handleMouse(xPos, yPos);
+	// cam.handleMouse(xPos, yPos);
 }

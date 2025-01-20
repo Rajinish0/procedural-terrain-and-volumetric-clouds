@@ -223,13 +223,16 @@ float Perlin2d::perlin(float x, float y) {
 	float out = 0;
 	float a = 1;
 	float p = 1;
+	float max = 0.0;
 	for (int i = 0; i < octaves; ++i) {
 		out += p * noise(x * a, y * a);
 		p *= 0.5;
 		a *= 2;
+		max += p; 
 	}
+	return std::max(0.0f, out / max);
 	//out += (1.0f/(1 << i))*noise(x * (1 << i), y * (1 << i) );
-	return std::min(std::max(out, 0.0f), 1.0f);
+	// return std::min(std::max(out, 0.0f), 1.0f);
 }
 
 Perlin2d::~Perlin2d() {

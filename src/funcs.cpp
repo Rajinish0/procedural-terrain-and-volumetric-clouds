@@ -330,4 +330,198 @@ namespace funcs{
 	size_t flatten(size_t i, size_t j, size_t width){
 		return (j + i * width);
 	}
+
+	GLuint genWorleyNoise(unsigned int width, unsigned int height, unsigned int breadth, unsigned int num_tiles){
+		// float boxWidth  	= (float)width / (float)num_tiles, 
+		// 	  boxHeight 	= (float)height / (float)num_tiles,
+		// 	  boxBreadth 	= (float)breadth / (float)num_tiles;
+
+		// GLubyte vals[height * breadth * width]; 
+
+		// unsigned int z, y, x, tileX, tileY, tileZ;
+		// int i, j, k;
+
+		// const float max_dist = pow(boxWidth * boxWidth + boxHeight * boxHeight + boxBreadth * boxBreadth, 0.5f);
+
+		// for (z = 0; z < breadth; ++z){
+		// 	std::ofstream file {"out"+ std::to_string(z) +".ppm"}; 
+		// 	file << "P3\n";
+		// 	file << width << ' ' << height << "\n255\n";
+		// 	for (y = 0; y < height; ++y){
+		// 		for (x = 0; x < width; ++x){
+		// 			tileX = x / boxWidth;
+		// 			tileY = y / boxHeight;
+		// 			tileZ = z / boxBreadth;
+		// 			float min_d = 1000.0f;
+		// 			float color = 0.0f;
+		// 			for (i = -1; i <= 1; ++i){
+		// 				for (j = -1; j <= 1; ++j){
+		// 					for (k =-1; k <= 1; ++k){
+		// 					auto [ anchor_x,  anchor_y, anchor_z] = deterministic_random(
+		// 											  std::to_string((i + tileY + num_tiles)%num_tiles) + 
+		// 											  std::to_string((j + tileX + num_tiles)%num_tiles) + 
+		// 											  std::to_string((k + tileZ + num_tiles)%num_tiles)
+		// 											  );
+		// 						anchor_x = (tileX + j + anchor_x) * boxWidth;
+		// 						anchor_y = (tileY + i + anchor_y) * boxHeight;
+		// 						anchor_z = (tileZ + k + anchor_z) * boxBreadth;
+		// 						min_d = std::min(min_d, dist( {x, y, z},{anchor_x, anchor_y, anchor_z} ));
+		// 					}
+		// 				}
+		// 			}
+		// 			color += min_d/max_dist;
+		// 			vals[z * width * height +  y * width + x] = static_cast<GLubyte>((1 - color) * 255.0f);
+		// 			unsigned int v = vals[z * width * height +  y * width + x];
+		// 			file << v << ' ' << v << ' ' << v << '\n';
+		// 			// std::cout << '(' << x << ','
+		// 					//   << y << ',' << z << ')' << ":" << static_cast<int>(vals[z * width * height +  y * width + x]) << std::endl;
+		// 		}
+		// 	}
+		// 	// file.close();
+		// }
+
+		std::ifstream file("new_raw_data.raw", std::ios::binary);
+		if (!file){
+			std::cerr << "Failed to open file.";
+		}
+
+		// int DEPTH, HEIGHT, WIDTH;
+		struct HeaderInfo {
+			uint32_t DEPTH;
+			uint32_t HEIGHT;
+			uint32_t WIDTH;
+			uint32_t CHANNELS;
+		} info ;
+		// file.read(reinterpret_cast<char*>(&DEPTH), sizeof(int));
+		// file.read(reinterpret_cast<char*>(&HEIGHT), sizeof(int));
+		// file.read(reinterpret_cast<char*>(&WIDTH), sizeof(int));
+		// std::cout << sizeof(HeaderInfo) << ' ' << sizeof(int) * 3 << std::endl;
+
+		// i dont want to use sizeof(HeaderInfo) bcz I don't trust padding
+		file.read(reinterpret_cast<char*>(&info), sizeof(int) * 4 );
+
+		std::cout << info.DEPTH << ' ' <<  info.HEIGHT<< ' ' << info.WIDTH
+				  << ' ' << info.CHANNELS << std::endl;
+
+		size_t sz = info.DEPTH * info.HEIGHT * info.WIDTH * info.CHANNELS * sizeof(uint8_t);
+		std::vector<uint8_t> data(sz / sizeof(uint8_t));
+		std::cout << "DATA SIZE" << data.size() << ' ' << sizeof(uint8_t) << std::endl;
+		file.read(reinterpret_cast<char*>(data.data()), sz);
+		file.close();
+		std::cout << "READ THE DATA" << std::endl;
+		std::cout << "SAMPLE: " << (int)data[0] << std::endl;
+
+
+		unsigned int tId;
+		glGenTextures(1, &tId);
+
+		glBindTexture(GL_TEXTURE_3D, tId);
+		glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, info.WIDTH, info.HEIGHT, info.DEPTH, 0, GL_RGBA, GL_UNSIGNED_BYTE, data.data());
+
+		// Set texture parameters
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_REPEAT);
+
+		glBindTexture(GL_TEXTURE_3D, 0);
+
+		return tId;
+	}
+
+
+	GLuint loadWeatherData(std::string fname){
+		std::ifstream file (fname, std::ios::binary);
+		if (!file){
+			std::cerr << "Couldn't open file " << fname << std::endl;
+			return 0;
+		}
+
+		struct HeaderInfo {
+			uint32_t HEIGHT;
+			uint32_t WIDTH;
+			uint32_t CHANNELS;
+		} info;
+
+		file.read(reinterpret_cast<char*>(&info), sizeof(int) * 3);
+
+		std::cout << info.HEIGHT<< ' ' << info.WIDTH
+				  << ' ' << info.CHANNELS << std::endl;
+
+		size_t sz = info.HEIGHT * info.WIDTH * info.CHANNELS * sizeof(uint8_t);
+		std::vector<uint8_t> data(sz / sizeof(uint8_t));
+		std::cout << "DATA SIZE" << data.size() << ' ' << sizeof(uint8_t) << std::endl;
+		file.read(reinterpret_cast<char*>(data.data()), sz);
+		file.close();
+		std::cout << "READ THE DATA" << std::endl;
+		std::cout << "SAMPLE: " << (int)data[0] << std::endl;
+		std::cout << "SAMPLE: " << (int)data[1] << std::endl;
+
+
+		unsigned int tId;
+		glGenTextures(1, &tId);
+
+		glBindTexture(GL_TEXTURE_2D, tId);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, info.WIDTH, info.HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, data.data());
+
+		// Set texture parameters
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glGenerateMipmap(GL_TEXTURE_2D);
+
+		glBindTexture(GL_TEXTURE_2D, 0);
+
+		return tId;
+
+	}
+
+	GLuint loadDetailTexture(std::string fname){
+		std::ifstream file(fname, std::ios::binary);
+		if (!file){
+			std::cerr << "Failed to open file.";
+			return 0;
+		}
+
+		// int DEPTH, HEIGHT, WIDTH;
+		struct HeaderInfo {
+			uint32_t DEPTH;
+			uint32_t HEIGHT;
+			uint32_t WIDTH;
+			uint32_t CHANNELS;
+		} info ;
+
+		file.read(reinterpret_cast<char*>(&info), sizeof(int) * 4 );
+
+		std::cout << info.DEPTH << ' ' <<  info.HEIGHT<< ' ' << info.WIDTH
+				  << ' ' << info.CHANNELS << std::endl;
+
+		size_t sz = info.DEPTH * info.HEIGHT * info.WIDTH * info.CHANNELS * sizeof(uint8_t);
+		std::vector<uint8_t> data(sz / sizeof(uint8_t));
+		std::cout << "DATA SIZE" << data.size() << ' ' << sizeof(uint8_t) << std::endl;
+		file.read(reinterpret_cast<char*>(data.data()), sz);
+		file.close();
+		std::cout << "READ THE DATA" << std::endl;
+		std::cout << "SAMPLE: " << (int)data[0] << std::endl;
+
+
+		unsigned int tId;
+		glGenTextures(1, &tId);
+
+		glBindTexture(GL_TEXTURE_3D, tId);
+		glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB, info.WIDTH, info.HEIGHT, info.DEPTH, 0, GL_RGB, GL_UNSIGNED_BYTE, data.data());
+
+		// Set texture parameters
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_REPEAT);
+
+		glBindTexture(GL_TEXTURE_3D, 0);
+
+		return tId;
+	}
 }

@@ -7,6 +7,8 @@ in vec3 normal;
 const vec3 skycolor = vec3(0.86f, 0.82f, 0.78f);
 // const vec3 lightPos = vec3(0.0f, 20.0f, 0.0f);
 const float maxDist = 10.0f;
+const vec3 sunDirection = normalize(vec3(0.0f, 1.0f, -2.0f));
+
 
 out vec4 fragcol;
 
@@ -22,9 +24,11 @@ in float dist;
 in vec3 col;
 
 void main(){
-    vec3 lightPos = fragpos + vec3(0.0f, 20.0f, 0.0f);
+    vec3 lightPos = fragpos + sunDirection;
     vec3 vecToLight = normalize(lightPos - fragpos);
-    vec3 tCol = vec3(0.7f, 0.9f, 0.8f)*max(dot(vecToLight, normal), 0.0f) + 
+    //vec3(0.7f, 0.9f, 0.8f)
+    //vec3(0.58823, 0.43529, 0.2)
+    vec3 tCol = vec3(0.60784, 0.43529, 0.31372)*max(dot(vecToLight, normal), 0.0f) + 
                 vec3(0.1f);
     float d = min(dist, maxDist);
     float alpha = d/maxDist;

@@ -79,11 +79,16 @@ void Camera::move(direc d, float dt) {
 
 void Camera::incPitch(float increment) {
 	this->pitch += increment;
+	this->pitch = funcs::clamp(this->pitch, -45.0f, 45.0f);
+	updateDirection();
 	// this->pitch = funcs::clamp(this->pitch, -89.0f, 89.0f);
 }
 
 void Camera::incYaw(float increment) {
 	this->yaw += increment;
+	yaw = (yaw > 360) ? (yaw - 360) : (yaw < -360) ? yaw + 360 : yaw;
+	// this->yaw = funcs::clamp(this->yaw, -360.0f, 360.0f);
+	updateDirection();
 	//this->yaw = funcs::clamp(this->yaw, -360.0f, 360.0f);
 }
 

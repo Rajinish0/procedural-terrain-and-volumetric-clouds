@@ -40,8 +40,8 @@ _chunkData generateChunkData(UI size, glm::vec2 center = glm::vec2(0.0f)){
 	float tlX = (size - 1)/-2.0f;
 	float tlY = (size - 1)/2.0f;
 	float x, y;
-	float scale = 10.0f/chunkSize;
-    Perlin2d perlin;
+	float scale = (10.0f/chunkSize)/5.0f;
+    Perlin2d perlin(256, 8);
 	for (unsigned int i =0; i < size + 1; ++i){
 		for (unsigned int j =0; j < size + 1; ++j){
             // if (j == size)
@@ -49,7 +49,7 @@ _chunkData generateChunkData(UI size, glm::vec2 center = glm::vec2(0.0f)){
             // else
          	x = (center.x + tlX + (float)j) * scale;
 			y = (center.y + tlY - (float)i) * scale;
-			float p = perlin.perlin(x, y) ;
+			float p = perlin.perlin(x, y);
             v[funcs::flatten(i, j, size + 1)] = p;
             // if (i != size && j != size)
      		data.heights[funcs::flatten(i, j, size + 1)] = p;

@@ -47,12 +47,15 @@ public:
         glBindVertexArray(0);
     }
 
-    void draw(Shader& shader, unsigned int textureId){
+    void draw(Shader& shader, unsigned int textureId, unsigned int depthTextureId){
         shader.use();
         glBindVertexArray(VAO);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, textureId);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, depthTextureId);
         shader.setInt("texture_diffuse1", 0);
+        shader.setInt("depthTexture", 1);
         glDrawArrays(GL_TRIANGLES, 0, 6);
         glBindVertexArray(0);
     }
