@@ -8,7 +8,8 @@ class FrameBuffer{
 private:
     bool isReady = false;
     Plane plane;
-    glm::vec4 clearColor = glm::vec4(0.86f, 0.82f, 0.78f, 1.0f);
+    // glm::vec4 clearColor = glm::vec4(0.86f, 0.82f, 0.78f, 1.0f);
+    glm::vec4 clearColor = glm::vec4(glm::vec3(0.1f), 1.0f);
 
 public:
     unsigned int FBO, RBO, textureId, depthTextureId;

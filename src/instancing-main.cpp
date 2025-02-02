@@ -22,6 +22,8 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "audio_manager.h"
 #include "terrain.h"
+#include "compute_shader.h"
+#include "debug.h"
 #include "framebuffer.h"
 #include "endless_terrain.h"
 #include <ft2build.h> // checking if build was good
@@ -163,7 +165,9 @@ float moveVel = 0.015f;
 float densityThreshold = .420003f;
 float scale 		   = .595005f;
 float weatherScale     = .0001;
-float higherScale 	   = .375008;
+float higherScale 	   = 15.0f;
+float SIGMA			   = 0.9f;
+float HG 			   = 0.3f;
 glm::vec3 offSet(0.0f);
 
 Camera cam;
@@ -283,6 +287,20 @@ int main() {
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+
+	unsigned int compT;
+	glGenTextures(1, &compT);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, compT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 800, 600, 0, GL_RGBA, 
+				GL_FLOAT, NULL);
+
+	glBindImageTexture(0, compT, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+
 	
 	Shader shader{"shaders/p_v.glsl", "shaders/p_f.glsl"};
 	Shader shader2{"shaders/q_v.glsl", "shaders/q_f.glsl"};
@@ -290,11 +308,13 @@ int main() {
 	Shader shader4{"shaders/e_v.glsl", "shaders/e_f.glsl"};
 	Shader shader5{"shaders/normal_viz_v.glsl", "shaders/normal_viz_f.glsl", "shaders/normal_viz.glsl"};
 	Shader shader6{"shaders/quadV.glsl", "shaders/quadF.glsl"};
+	Shader screenShdr{"shaders/screenV.glsl", "shaders/screenF.glsl"};
+	ComputeShader computeShdr {"shaders/compute.glsl"};
 
 	glEnable(GL_DEPTH_TEST);
 	glm::mat4 proj(1.0f);
 	float near = .1f;
-	float far = 200.f;
+	float far = 500.f;
 	proj = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, near, far);
 	float waterHeight = -0.2f;
 
@@ -302,11 +322,11 @@ int main() {
 	FrameBuffer fbo;
 
 
-	shader6.use();
-	shader6.setVec3("camPos", cam.position);
-	shader6.setFloat("near", near);
-	shader6.setFloat("far", far);
-	shader6.setMatrix("invProjMat", glm::inverse(proj));
+	computeShdr.use();
+	computeShdr.setVec3("camPos", cam.position);
+	computeShdr.setFloat("near", near);
+	computeShdr.setFloat("far", far);
+	computeShdr.setMatrix("invProjMat", glm::inverse(proj));
 
 
 	// unsigned int size = 241;
@@ -351,14 +371,16 @@ int main() {
 
 	// Plane plane;
 	GLuint ntId = funcs::genWorleyNoise(50, 50, 50);
-	GLuint weatherTextureId = funcs::loadWeatherData("weather_data.raw");
+	GLuint weatherTextureId = funcs::loadWeatherData("weather_data_2.raw");
 	GLuint detailTextureId = funcs::loadDetailTexture("low_res.raw");
+	GLuint highTextureId = funcs::loadGeneric3dTexture("f_data_HIGH.raw");
+	// GLuint weatherDataTexure = funcs::loadGeneric2dTexture("weather_data_f.raw");
 
 	while (!window.shouldClose())
 	{
 		processInput(window.window);
 
-		// glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
+		//glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
 
 		glClearColor(0.86f, 0.82f, 0.78f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -377,38 +399,61 @@ int main() {
 		#endif
 		fbo.unBind();
 
-		shader6.use();
-		shader6.setMatrix(
+		computeShdr.use();
+		computeShdr.setMatrix(
 			"invViewMat",
 			glm::inverse(cam.getView())
 		);
-		shader6.setVec3("camPos", cam.position);
-		// shader6.setVec3("offSet", glm::vec3(
-		// 	0.0f, 
-		// 	0.0f,
-		// 	(float)glfwGetTime()
-		// ));
-		shader6.setInt("texture_clouds", 2);
-		shader6.setInt("weather_data", 3);
-		shader6.setInt("detailTexture", 4);
-		shader6.setFloat("densityThreshold", densityThreshold);
-		shader6.setFloat("scale", scale);
-		shader6.setFloat("weatherScale", weatherScale);
-		shader6.setFloat("higherScale", higherScale);
-		shader6.setVec3("offSet", glm::vec3(
-			cam.position.x, 
-			0.0,
-			cam.position.z
+		computeShdr.setVec3("camPos", cam.position);
+		computeShdr.setVec3("offSet", glm::vec3(
+			0.0f, 
+			0.0f,
+			(float)glfwGetTime()
 		));
-		shader6.setVec3("bounding_rect.pos", glm::vec3(cam.position.x, 45.5f, cam.position.z));
-		shader6.setVec3("bounding_rect.dims", glm::vec3(300.0f, 100.0f, 300.0f));
-		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_3D, ntId);
+        computeShdr.setInt("texture_diffuse1", 1);
+        computeShdr.setInt("depthTexture", 2);
+		computeShdr.setInt("texture_clouds", 3);
+		computeShdr.setInt("weather_data", 4);
+		computeShdr.setInt("detailTexture", 5);
+		computeShdr.setFloat("densityThreshold", densityThreshold);
+		computeShdr.setFloat("scale", scale);
+		computeShdr.setFloat("weatherScale", weatherScale);
+		computeShdr.setFloat("higherScale", higherScale);
+		computeShdr.setFloat("SIGMA", SIGMA);
+		computeShdr.setFloat("HG", HG);
+		// computeShdr.setVec3("offSet", glm::vec3(
+		// 	cam.position.x, 
+		// 	0.0,
+		// 	cam.position.z
+		// ));
+		computeShdr.setFloat("uTime", (float)glfwGetTime());
+		computeShdr.setVec3("bounding_rect.pos", glm::vec3(0, 55.5f,0 ));
+		computeShdr.setVec3("bounding_rect.dims", glm::vec3(400.0f, 200.0f, 1000.0f));
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, compT);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, fbo.textureId);
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, fbo.depthTextureId);
 		glActiveTexture(GL_TEXTURE3);
-		glBindTexture(GL_TEXTURE_2D, weatherTextureId);
+		// glBindTexture(GL_TEXTURE_3D, ntId);
+		glBindTexture(GL_TEXTURE_3D, highTextureId);
 		glActiveTexture(GL_TEXTURE4);
+		glBindTexture(GL_TEXTURE_2D, weatherTextureId);
+		// glBindTexture(GL_TEXTURE_2D, weatherDataTexure);
+		glActiveTexture(GL_TEXTURE5);
 		glBindTexture(GL_TEXTURE_3D, detailTextureId);
-		fbo.draw(shader6);
+		glDispatchCompute((unsigned int)std::ceil(800.0/16.0), 
+						  (unsigned int)std::ceil(600.0/16.0),
+						  1);
+		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+		screenShdr.use();
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, compT);
+		glBindVertexArray(quadVAO);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+		// fbo.draw(computeShdr);
 
 		// fbo.Bind();
 		// fbo.unBind();
@@ -496,16 +541,30 @@ void processInput(GLFWwindow* window)
 
 
 	if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
-		densityThreshold += 0.01f;
+		densityThreshold += 0.001f;
 	
 	if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS)
-		densityThreshold -= 0.01f;
+		densityThreshold -= 0.001f;
 
 	if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS)
 		scale += 0.01f;
 	
 	if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS)
 		scale -= 0.01f;
+
+	if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS)
+		SIGMA += 0.001f;
+
+	if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS)
+		SIGMA -= 0.001f;
+
+	if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS)
+		// higherScale += .01f;
+		HG += 0.001;
+	
+	if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS)
+		// higherScale -= .01f;
+		HG -= 0.001;
 
 	// if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS){
 	// 	yOff += 0.001f;

@@ -220,10 +220,10 @@ public:
     }
 
     void bind(int num = 0){
-        glActiveTexture(GL_TEXTURE0);
+        glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, texture);
 
-        glActiveTexture(GL_TEXTURE1);
+        glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, normalTexture);
     }
 
@@ -298,8 +298,8 @@ public:
                     model = glm::translate(model, glm::vec3((float)nj * scale, 0.0f, (float)ni * scale ));
                     model = glm::scale(model, glm::vec3(scale/float(chunkSize)));
                     shader.setMatrix("model", model);
-                    shader.setInt("heightMap", 0);
-                    shader.setInt("normalMap", 1);
+                    shader.setInt("heightMap", 1);
+                    shader.setInt("normalMap", 2);
                     chunk->bind();
                     LODMeshes[0].draw(shader);
                 // m1.draw(shader);
