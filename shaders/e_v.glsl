@@ -46,9 +46,9 @@ void main(){
     vec2 heightTexCoord2 = (vec2(aPos.x + 1, -aPos.z) + vec2( float(size.x)/2.0f,  float(size.y)/2.0f)) / size;
     vec2 heightTexCoord3 = (vec2(aPos.x, -(aPos.z + 1)) + vec2( float(size.x)/2.0f,  float(size.y)/2.0f)) / size;
 
-    float y = texture(heightMap, heightTexCoord ).r * 85.0f;
-    float y2 = texture(heightMap, heightTexCoord2 ).r * 85.0f;
-    float y3 = texture(heightMap, heightTexCoord3 ).r * 85.0f;
+    float y = texture(heightMap, heightTexCoord ).r * 65.0f;
+    float y2 = texture(heightMap, heightTexCoord2 ).r * 65.0f;
+    float y3 = texture(heightMap, heightTexCoord3 ).r * 65.0f;
 
     vec3 v1 = vec3(aPos.x, y, aPos.z);
     vec3 v2 = vec3(aPos.x + (1), y2, aPos.z);
