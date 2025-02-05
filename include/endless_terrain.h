@@ -14,10 +14,10 @@
 #include "engine_consts.h"
 
 
-const UI SIZE = 241;
-const UI chunkSize = SIZE - 1;
-const UI LODs = 12;
-const UI LOD_INC = 2;
+const int SIZE = 241;
+const int chunkSize = SIZE - 1;
+const int LODs = 12;
+const int LOD_INC = 2;
 const float SCALE = 10.0f;
 
 // struct ChunkData{
@@ -35,57 +35,96 @@ struct _chunkData{
 };
 
 
-_chunkData generateChunkData(UI size, glm::vec2 center = glm::vec2(0.0f)){
+_chunkData generateChunkData(int size, glm::vec2 center = glm::vec2(0.0f)){
     _chunkData data(VEC4_VEC(size * size));
-    FLOAT_VEC v( (size+1) * (size + 1)  );
+    int v_size = size + 2;
+    FLOAT_VEC v( ( v_size ) * ( v_size )  );
 	float tlX = (size - 1)/-2.0f;
 	float tlY = (size - 1)/2.0f;
 	float x, y;
 	float scale = (10.0f/chunkSize)/5.0f;
     Perlin2d perlin(256, 8);
-	for (unsigned int i =0; i < size + 1; ++i){
-		for (unsigned int j =0; j < size + 1; ++j){
+	for (int i =-1; i < size + 1; ++i){
+		for (int j =-1; j < size + 1; ++j){
             // if (j == size)
                 // x = (center.x + chunkSize + tlX) * scale;
             // else
          	x = (center.x + tlX + (float)j) * scale;
 			y = (center.y + tlY - (float)i) * scale;
 			float p = perlin.perlin(x, y);
-            v[funcs::flatten(i, j, size + 1)] = p;
+            v[funcs::flatten(i + 1, j + 1, v_size )] = p;
             // if (i != size && j != size)
      		// v[funcs::flatten(i, j, size)] = p;
 		}
 	}
 
-    auto vFunc = [size](int i, int j) -> UI{return funcs::flatten(i, j, size + 1);};
+    // std::cout << v[0] << std::endl;
+    auto vFunc = [v_size](int i, int j) -> int{return funcs::flatten(i + 1, j + 1, v_size);};
 
-    for (UI i =0; i < size; ++i){
-        for (UI j =0; j < size; ++j){
+    const std::vector< std::pair<std::pair<int, int>, std::pair<int, int>>> dpairs 
+                                                            { { {1, -1}, {1, 1}  }, 
+                                                               { {1, 1}, {-1, 1},  },
+                                                               { {-1, 1} , {-1, -1} },
+                                                               { {-1, -1} , {1, -1} },
+                                                            };
+
+    for (int i =0; i < size; ++i){
+        for (int j =0; j < size; ++j){
             float height = v[ vFunc(i, j) ];
-            float height_dx = v[ vFunc(i, j + 1) ];
-            float height_dy = v[ vFunc(i + 1, j) ];
-            // data.heights[funcs::flatten(i, j, size)] = height;
+            glm::vec3 norm(0.0f);
+            for (auto [p1, p2] : dpairs){
+                auto [dy1, dx1] = p1;
+                auto [dy2, dx2] = p2;
+                float height2 = v[ vFunc(i+dy1, j+dx1) ];
+                float height3 = v[ vFunc(i+dy2, j+dx2) ];
+                // glm::vec3 norm(0.0f);
+                glm::vec3 v1 = glm::vec3(((float)j),  height * REngine::MAX_TERRAIN_HEIGHT, (float)i);
+                glm::vec3 v2 = glm::vec3(((float)j+dx1),  height2 * REngine::MAX_TERRAIN_HEIGHT, (float)(i+dy1));
+                glm::vec3 v3 = glm::vec3(((float)j+dx2),  height3 * REngine::MAX_TERRAIN_HEIGHT, (float)(i+dy2));
+
+                glm::vec3 dy = v2 - v1;
+                glm::vec3 dx = v3 - v1;
+                norm += glm::cross(dy, dx);
+                // break;
+            }
+            // float height2 = v[ vFunc(i+1, j+1) ];
+            // float height3 = v[ vFunc(i+1, j-1) ];
+            // // glm::vec3 norm(0.0f);
+            // glm::vec3 v1 = glm::vec3(((float)j),  height * REngine::MAX_TERRAIN_HEIGHT, (float)i);
+            // glm::vec3 v2 = glm::vec3(((float)j+1),  height2 * REngine::MAX_TERRAIN_HEIGHT, (float)i+1);
+            // glm::vec3 v3 = glm::vec3(((float)j-1),  height3 * REngine::MAX_TERRAIN_HEIGHT, (float)i+1);
+
+            // glm::vec3 dy = v2 - v1;
+            // glm::vec3 dx = v3 - v1;
+            // glm::vec3 norm = glm::cross(dx, dy);
+
+            // for (int dy : dys ){
+            //     float height_dy = v[ vFunc(i + dy, j) ];
+            //     glm::vec3 v3 = glm::vec3(((float)(j)),  height_dy * REngine::MAX_TERRAIN_HEIGHT, (float)(i+dy));
+            //     for (int dx : dxs){
+            //         float height_dx = v[ vFunc(i + dy, j + dx) ];
+            //         // data.heights[funcs::flatten(i, j, size)] = height;
 
 
+            //         glm::vec3 v2 = glm::vec3(((float)(j+dx)) , height_dx * REngine::MAX_TERRAIN_HEIGHT, (float)(i+dy));
 
-            glm::vec3 v1 = glm::vec3(((float)j),  height * REngine::MAX_TERRAIN_HEIGHT, (float)i);
-            glm::vec3 v2 = glm::vec3(((float)(j+1)) ,  height_dx * REngine::MAX_TERRAIN_HEIGHT, (float)i);
-            glm::vec3 v3 = glm::vec3(((float)j), height_dy * REngine::MAX_TERRAIN_HEIGHT, (float)(i+1));
+            //         glm::vec3 dxx = v2 - v1;
+            //         glm::vec3 dyy = v3 - v1;
 
-            glm::vec3 dx = v2 - v1;
-            glm::vec3 dy = v3 - v1;
-
-            glm::vec3 n = glm::normalize(glm::cross(dy, dx));
-            n = (n + 1.0f)/2.0f;
-            data.heights_and_normals[funcs::flatten(i, j, size)] = glm::vec4(height, n.x, n.y, n.z);
-
+            //         norm += glm::cross(dyy, dxx);
+            //         // n = (n + 1.0f)/2.0f;
+            //     }
+            // }
+            norm = glm::normalize(norm);
+            norm = (norm + 1.0f)/2.0f;
+            data.heights_and_normals[funcs::flatten(i, j, size)] = glm::vec4(height, norm.x, norm.y, norm.z);
         } 
     }
     return data;
 }
 
 
-FLOAT_VEC generateHeightData(UI size, glm::vec2 center = glm::vec2(0.0f)){
+FLOAT_VEC generateHeightData(int size, glm::vec2 center = glm::vec2(0.0f)){
 	Perlin2d perlin;
 	FLOAT_VEC v(size * size);
 
@@ -138,7 +177,7 @@ void requestHeightData(UI size, glm::vec2 center, std::function<void(FLOAT_VEC)>
     ).detach();
 }
 
-void requestChunkData(UI size, glm::vec2 center, std::function<void(_chunkData)> callback){
+void requestChunkData(int size, glm::vec2 center, std::function<void(_chunkData)> callback){
     std::thread([=](){
         _chunkData data = generateChunkData(size, center);
         callback(data);
@@ -154,13 +193,13 @@ public:
     GLuint normalTexture;
     glm::vec2 center;
 
-    // HeightMapWrapper(UI size, glm::vec2 center)
+    // HeightMapWrapper(int size, glm::vec2 center)
     //     :size(size), center(center){
     //     glGenTextures(1, &texture);
     //     requestHeightData(size, center, [this](FLOAT_VEC v){onDataRecv(v);});
     // }
 
-    HeightMapWrapper(UI size, glm::vec2 center)
+    HeightMapWrapper(int size, glm::vec2 center)
         :size(size), center(center){
             glGenTextures(1, &texture);
             requestChunkData(size, center, [this](_chunkData d){onDataRecv(d);});
@@ -244,7 +283,7 @@ private:
     bool dataReceived = false;
     // FLOAT_VEC v;
     VEC4_VEC height_and_normals;
-    UI size;
+    int size;
     float scale;
 };
 
@@ -260,7 +299,7 @@ public:
 	glm::mat4 proj;
     Mesh m1 = funcs::genPlane2(SIZE, 1);
 
-    EndlessTerrain(Camera& player, UI size = SIZE, float scale = SCALE)
+    EndlessTerrain(Camera& player, int size = SIZE, float scale = SCALE)
         :player(player), size(size), chunkSize(size - 1), scale(scale)
     {
         proj = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 200.0f);
@@ -291,8 +330,8 @@ public:
     //    std::cout << "Px: " << player.position.x << " Py: " 
     //              << player.position.z << " x: " << x 
     //              << " y: " << y << std::endl;;
-        for (int di =-1; di <=1; ++di){
-            for (int dj =-1; dj <=1; ++dj){
+        for (int di =-2; di <=2; ++di){
+            for (int dj =-2; dj <=2; ++dj){
                 int ni = y + di,
                     nj = x + dj;
 
@@ -312,7 +351,7 @@ public:
                     shader.setInt("heightMap", 1);
                     shader.setInt("normalMap", 2);
                     chunk->bind();
-                    LODMeshes[0].draw(shader);
+                    LODMeshes[(std::max(std::abs(di), std::abs(dj)))/2.0f].draw(shader);
                 // m1.draw(shader);
                 }
             }
@@ -322,7 +361,7 @@ public:
 private:
     E_T_TYPES::MESH_VEC LODMeshes;
     Camera& player;
-    UI size, chunkSize; 
+    int size, chunkSize; 
     // MeshTypes::PAIR_HEIGHT_MAP history;
     /*
     TO DO:

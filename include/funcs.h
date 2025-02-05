@@ -19,8 +19,8 @@ namespace funcs {
 		if (val > upperb) return upperb;
 		return val;
 	}
-	size_t flatten(size_t i, size_t j, size_t width);
 
+	int flatten(int i, int j, int width);
 
 
 
