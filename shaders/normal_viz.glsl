@@ -9,6 +9,8 @@ in VS_OUT{
 
 const float MAG = 0.1;
 
+out vec3 normal;
+
 uniform mat4 proj;
 
 void genLine(int index) { // for the ith vertex
@@ -17,6 +19,7 @@ void genLine(int index) { // for the ith vertex
 
 	gl_Position = proj * ( gl_in[index].gl_Position + 
 								 vec4(vs_out[index].normal, 0.0) * MAG);
+	normal = vs_out[index].normal;
 	EmitVertex();
 
 	EndPrimitive();

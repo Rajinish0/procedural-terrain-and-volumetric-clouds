@@ -19,6 +19,8 @@ uniform vec2 offset;
 uniform sampler2D heightMap;
 uniform sampler2D normalMap;
 
+uniform float maxHeight;
+
 out vec3 col;
 out vec2 tCoord;
 out vec3 fragpos;
@@ -38,39 +40,41 @@ void main(){
         should also solve the problem of there being a line b/w two chunks due to incorrect lighting
     */
 
-    vec2 size = textureSize(heightMap, 0).xy;    
+    // vec2 size = textureSize(heightMap, 0).xy;
     // // bool xFlipped = ((gl_VertexID + 1) % 241 == 0);//> 0 && (gl_VertexID % 240 == 0) );
     // bool xFlipped = false;
 
-    vec2 heightTexCoord = (vec2(aPos.x, -aPos.z) + vec2( float(size.x)/2.0f,  float(size.y)/2.0f)) / size;
-    vec2 heightTexCoord2 = (vec2(aPos.x + 1, -aPos.z) + vec2( float(size.x)/2.0f,  float(size.y)/2.0f)) / size;
-    vec2 heightTexCoord3 = (vec2(aPos.x, -(aPos.z + 1)) + vec2( float(size.x)/2.0f,  float(size.y)/2.0f)) / size;
+    // vec2 heightTexCoord = (vec2(aPos.x, -aPos.z) + vec2( float(size.x)/2.0f,  float(size.y)/2.0f)) / size;
+    // vec2 heightTexCoord2 = (vec2(aPos.x + 1, -aPos.z) + vec2( float(size.x)/2.0f,  float(size.y)/2.0f)) / size;
+    // vec2 heightTexCoord3 = (vec2(aPos.x, -(aPos.z + 1)) + vec2( float(size.x)/2.0f,  float(size.y)/2.0f)) / size;
 
-    float y = texture(heightMap, heightTexCoord ).r * 65.0f;
-    float y2 = texture(heightMap, heightTexCoord2 ).r * 65.0f;
-    float y3 = texture(heightMap, heightTexCoord3 ).r * 65.0f;
+    vec4 info = texture(heightMap, texCoord );
+    float y = info.r * maxHeight;
+    // float y2 = texture(heightMap, heightTexCoord2 ).r * maxHeight;
+    // float y3 = texture(heightMap, heightTexCoord3 ).r * maxHeight;
 
-    vec3 v1 = vec3(aPos.x, y, aPos.z);
-    vec3 v2 = vec3(aPos.x + (1), y2, aPos.z);
-    vec3 v3 = vec3(aPos.x, y3, aPos.z + 1);
+    // vec3 v1 = vec3(aPos.x, y, aPos.z);
+    // vec3 v2 = vec3(aPos.x + (1), y2, aPos.z);
+    // vec3 v3 = vec3(aPos.x, y3, aPos.z + 1);
 
-    vec3 cp = normalize(cross(v3 - v1, v2 - v1));
+    // vec3 cp = normalize(cross(v3 - v1, v2 - v1));
     // cp = cp / length(cp);
     // vec3 cp = texture(normalMap, texCoord).rgb;
 
-    normal = normalize(mat3(transpose(inverse(model))) * cp);
+    vec3 cp = info.gba * 2.0 - 1.0;
 
-    if (y < 0.0) {
+    normal = normalize(mat3(transpose(inverse(model))) * cp);
+    if (y < 0.0*65.0) {
         col = vec3(0.0, 0.0, 0.5); // Deep water (Dark Blue)
-    } else if (y < 0.1) {
+    } else if (y < 0.1*65.0) {
         col = vec3(0.0, 0.5, 1.0); // Shallow water (Light Blue)
-    } else if (y < 0.3) {
+    } else if (y < 0.3*65.0) {
         col = vec3(1.0, 0.9, 0.6); // Beach/sand (Sandy Beige)
-    } else if (y < 0.5) {
+    } else if (y < 0.5*65.0) {
         col = vec3(0.5, 1.0, 0.5); // Grass (Bright Green)
-    } else if (y < 0.7) {
+    } else if (y < 0.7*65.0) {
         col = vec3(0.0, 0.4, 0.0); // Grass with some depth (Dark Green)
-    } else if (y < 0.9) {
+    } else if (y < 0.9*65.0) {
         col = vec3(0.6, 0.5, 0.4); // Rock/Mountain (Rocky Gray)
     } else {
         col = vec3(1.0, 1.0, 1.0); // Snow (White)

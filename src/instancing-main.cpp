@@ -561,9 +561,12 @@
 #include "framebuffer.h"
 #include "endless_terrain.h"
 #include "compute_shader.h"
+#include "engine_consts.h"
 #include "textrender.h"
 #include <ft2build.h> // checking if build was good
 
+
+// #define DRAW_NORMALS 1
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
@@ -770,6 +773,7 @@ int main() {
 	 };
 
 	Shader shader4{"shaders/e_v.glsl", "shaders/e_f.glsl"};
+	Shader shader5{"shaders/normal_viz_v.glsl", "shaders/normal_viz_f.glsl", "shaders/normal_viz.glsl"};
 
 	glEnable(GL_DEPTH_TEST);
 
@@ -939,7 +943,16 @@ int main() {
 		shader4.use();
 		shader4.setMatrix("proj", proj);
 		shader4.setMatrix("view", cam.getView());
+		shader4.setFloat("maxHeight", REngine::MAX_TERRAIN_HEIGHT);
 		terr.draw(shader4);
+
+		#if DRAW_NORMALS
+			shader5.use();
+			shader5.setMatrix("proj", proj);
+			shader5.setFloat("maxHeight", REngine::MAX_TERRAIN_HEIGHT);
+			shader5.setMatrix("view", cam.getView());
+			terr.draw(shader5);
+		#endif
 
 		// planeShdr.use();
 		// planeShdr.setVec3("lightPos", lightPos);

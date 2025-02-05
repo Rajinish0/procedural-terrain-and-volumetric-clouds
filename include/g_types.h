@@ -17,6 +17,7 @@ namespace Types{
     using FLOAT_VEC  = std::vector<float>;
     using CHAR_VEC   = std::vector<char>;
     using VEC3_VEC   = std::vector<glm::vec3>;
+    using VEC4_VEC   = std::vector<glm::vec4>;
     // using MESH_VEC   = std::vector<Mesh>;
     using IIPAIR     = std::pair<int, int>;
 }

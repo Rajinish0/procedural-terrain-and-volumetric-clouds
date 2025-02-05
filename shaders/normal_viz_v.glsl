@@ -32,22 +32,24 @@ out VS_OUT{
 
 void main(){
 
-    vec2 size = textureSize(heightMap, 0).xy;
-    vec2 heightTexCoord = (vec2(aPos.x, -aPos.z) + vec2( float(size)/2.0f,  float(size)/2.0f)) / size;
-    vec2 heightTexCoord2 = (vec2(aPos.x + 1, -aPos.z) + vec2( float(size)/2.0f,  float(size)/2.0f)) / size;
-    vec2 heightTexCoord3 = (vec2(aPos.x, -(aPos.z + 1)) + vec2( float(size)/2.0f,  float(size)/2.0f)) / size;
+    // vec2 size = textureSize(heightMap, 0).xy;
+    // vec2 heightTexCoord = (vec2(aPos.x, -aPos.z) + vec2( float(size)/2.0f,  float(size)/2.0f)) / size;
+    // vec2 heightTexCoord2 = (vec2(aPos.x + 1, -aPos.z) + vec2( float(size)/2.0f,  float(size)/2.0f)) / size;
+    // vec2 heightTexCoord3 = (vec2(aPos.x, -(aPos.z + 1)) + vec2( float(size)/2.0f,  float(size)/2.0f)) / size;
 
-    float y = texture(heightMap, texCoord).r * 15.0f;
-    float y2 = texture(heightMap, heightTexCoord2).r * 15.0f;
-    float y3 = texture(heightMap, heightTexCoord3).r * 15.0f;
+    // float y = texture(heightMap, texCoord).r * 65.0f;
+    // float y2 = texture(heightMap, heightTexCoord2).r * 65.0f;
+    // float y3 = texture(heightMap, heightTexCoord3).r * 65.0f;
 
-    vec3 v1 = vec3(aPos.x, y, aPos.z);
-    vec3 v2 = vec3(aPos.x + 1, y2, aPos.z);
-    vec3 v3 = vec3(aPos.x, y3, aPos.z + 1);
+    // vec3 v1 = vec3(aPos.x, y, aPos.z);
+    // vec3 v2 = vec3(aPos.x + 1, y2, aPos.z);
+    // vec3 v3 = vec3(aPos.x, y3, aPos.z + 1);
 
-    vec3 cp = cross(v3 - v1, v2 - v1);
-    cp = cp / length(cp);
-    // vec3 cp = texture(normalMap, texCoord).rgb;
+    vec4 info = texture(heightMap, texCoord);
+    float y = info.r * 65.0f;
+    // vec3 cp = cross(v3 - v1, v2 - v1);
+    // cp = cp / length(cp);
+    vec3 cp = info.gba * 2.0 - 1.0;
 
     vs_out.normal = normalize(mat3(transpose(inverse(view * model))) * cp);
 

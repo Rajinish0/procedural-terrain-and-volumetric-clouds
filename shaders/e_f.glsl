@@ -29,22 +29,35 @@ vec3 applyFog(vec3 originalColor, float distance) {
 in float dist;
 in vec3 col;
 
-void main(){
-    vec3 lightPos = fragpos + sunDirection;
-    vec3 vecToLight = normalize(lightPos - fragpos);
-    //vec3(0.7f, 0.9f, 0.8f)
-    //vec3(0.58823, 0.43529, 0.2)
-    // vec3 tCol = vec3(0.60784, 0.43529, 0.31372)*max(dot(vecToLight, normal), 0.0f) + 
-    //             vec3(0.1f);
-    vec3 co = texture(texture_diffuse1, tCoord).rgb;
-    vec3 tCol = co*max(dot(vecToLight, normal), 0.0f) + co*0.3;
-    float d = min(dist, maxDist);
-    float alpha = d/maxDist;
-    //vec3 tempcol = (1-alpha)*tCol + (alpha)*skycolor;
-    vec3 tempcol = applyFog(tCol, d);
+const float minHeight = 0.0;
+const float maxHeight = 65.0;
+const vec3 snowColor  = vec3(0.9, 0.9, 0.95);  // Light bluish-white
+const vec3 grassColor = vec3(0.1, 0.6, 0.1);   // Vibrant green
+const vec3 rockColor  = vec3(0.4, 0.3, 0.2);   // Earthy brown-gray
 
-    fragcol = vec4(tCol, 1.0f);
+
+void main(){
+
+    /*
+    IMPL 1
+    */
+    // vec3 lightPos = fragpos + sunDirection;
+    // vec3 vecToLight = normalize(lightPos - fragpos);
+    // //vec3(0.7f, 0.9f, 0.8f)
+    // //vec3(0.58823, 0.43529, 0.2)
+    // // vec3 tCol = vec3(0.60784, 0.43529, 0.31372)*max(dot(vecToLight, normal), 0.0f) + 
+    // //             vec3(0.1f);
+    // vec3 co = texture(texture_diffuse1, tCoord).rgb;
+    // vec3 tCol = co*max(dot(vecToLight, normal), 0.0f) + co*0.3;
+    // float d = min(dist, maxDist);
+    // float alpha = d/maxDist;
+    // //vec3 tempcol = (1-alpha)*tCol + (alpha)*skycolor;
+    // vec3 tempcol = applyFog(tCol, d);
+
+    // fragcol = vec4(tempcol, 1.0f);
     // fragcol = vec4(col, 1.0f);
+
+    /* IMPL 2.0*/
     float s = smoothstep(0.5, 0.9, dot(normal, vec3(.3, 1, 0.05)));
     vec3 color = mix(vec3(0.1), vec3(0.7, 0.72, 0.7), smoothstep(.1, .7, s));
 
@@ -60,9 +73,31 @@ void main(){
     color *= lin;
     color *= (.6 + .4*smoothstep(400., 100., abs(fragpos.z)));
 
-    // color = applyFog(color, d);
-
     fragcol =  vec4(color, 1.0f);
 
-    // fragcol = vec4(0.2f, 0.3f, 0.3f, 1.0f);
+    /* IMPL 3.0 */
+    // float height = fragpos.y; // Altitude
+    // // float noise = getNoise(FragPos); // Randomization
+    // float heightFactor = smoothstep(minHeight, maxHeight, height); 
+
+    // // Slope detection: using normal's y component
+    // float slopeFactor = clamp(normal.y, 0.0, 1.0);
+    
+    // // Snow blending
+    // float snowBlend = smoothstep(0.6, 1.0, heightFactor) * slopeFactor;
+    
+    // // Grass blending
+    // float grassBlend = smoothstep(0.3, 0.6, heightFactor) * slopeFactor;
+    
+    // // Rock blending (default if neither snow nor grass)
+    // float rockBlend = 1.0 - (snowBlend + grassBlend);
+
+    // vec3 finalColor = snowBlend * snowColor + 
+    //                   grassBlend * grassColor + 
+    //                   rockBlend * rockColor;
+
+    // fragcol = vec4(vec3(dot(normal, vec3(0.0, 1.0, 0.0))), 1.0);
+
+
+    // fragcol = vec4(col, 1.0f);
 }

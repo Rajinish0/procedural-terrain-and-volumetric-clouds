@@ -11,6 +11,7 @@
 #include <map>
 #include <functional>
 #include "debug.h"
+#include "engine_consts.h"
 
 
 const UI SIZE = 241;
@@ -25,18 +26,18 @@ const float SCALE = 10.0f;
 // };
 
 struct _chunkData{
-    FLOAT_VEC heights;
-    VEC3_VEC  normals;
+    VEC4_VEC heights_and_normals;
+    // VEC3_VEC  normals;
 
-    _chunkData(FLOAT_VEC heights, VEC3_VEC normals)
-        :heights(heights), normals(normals){}
+    _chunkData(VEC4_VEC heights_and_normals)
+        :heights_and_normals(heights_and_normals){}
 
 };
 
 
 _chunkData generateChunkData(UI size, glm::vec2 center = glm::vec2(0.0f)){
-    _chunkData data(FLOAT_VEC((size + 1) * (size + 1)), VEC3_VEC(size * size));
-    FLOAT_VEC v( (size + 1) * (size + 1)  );
+    _chunkData data(VEC4_VEC(size * size));
+    FLOAT_VEC v( (size+1) * (size + 1)  );
 	float tlX = (size - 1)/-2.0f;
 	float tlY = (size - 1)/2.0f;
 	float x, y;
@@ -52,11 +53,11 @@ _chunkData generateChunkData(UI size, glm::vec2 center = glm::vec2(0.0f)){
 			float p = perlin.perlin(x, y);
             v[funcs::flatten(i, j, size + 1)] = p;
             // if (i != size && j != size)
-     		data.heights[funcs::flatten(i, j, size + 1)] = p;
+     		// v[funcs::flatten(i, j, size)] = p;
 		}
 	}
 
-    auto vFunc = [size](int i, int j) -> UI{return funcs::flatten(i, j, size+1);};
+    auto vFunc = [size](int i, int j) -> UI{return funcs::flatten(i, j, size + 1);};
 
     for (UI i =0; i < size; ++i){
         for (UI j =0; j < size; ++j){
@@ -67,15 +68,16 @@ _chunkData generateChunkData(UI size, glm::vec2 center = glm::vec2(0.0f)){
 
 
 
-            glm::vec3 v1 = glm::vec3((center.x + tlX + (float)j) * scale,  height * 15.0f, (center.y + tlY - (float)i) * scale);
-            glm::vec3 v2 = glm::vec3((center.x + tlX + (float)(j+1)) * scale,  height_dx * 15.0f, (center.y + tlY - (float)i) * scale );
-            glm::vec3 v3 = glm::vec3((center.x + tlX + (float)j) * scale, height_dy * 15.0f, (center.y + tlY - (float)(i+1)) * scale  );
+            glm::vec3 v1 = glm::vec3(((float)j),  height * REngine::MAX_TERRAIN_HEIGHT, (float)i);
+            glm::vec3 v2 = glm::vec3(((float)(j+1)) ,  height_dx * REngine::MAX_TERRAIN_HEIGHT, (float)i);
+            glm::vec3 v3 = glm::vec3(((float)j), height_dy * REngine::MAX_TERRAIN_HEIGHT, (float)(i+1));
 
             glm::vec3 dx = v2 - v1;
             glm::vec3 dy = v3 - v1;
 
             glm::vec3 n = glm::normalize(glm::cross(dy, dx));
-            data.normals[funcs::flatten(i, j, size)] = n;
+            n = (n + 1.0f)/2.0f;
+            data.heights_and_normals[funcs::flatten(i, j, size)] = glm::vec4(height, n.x, n.y, n.z);
 
         } 
     }
@@ -170,39 +172,48 @@ public:
     */
 
     void onDataRecv(_chunkData d){
-        this->v = std::move(d.heights);
-        this->normals = std::move(d.normals);
+        // this->v = std::move(d.heights);
+        // this->normals = std::move(d.normals);
+        this->height_and_normals = std::move(d.heights_and_normals);
         dataReceived = true;
     }
 
-    void onDataRecv(FLOAT_VEC v){
-        // print("RECEVD DATA");
-        // print(v.size());
-        // print(v[0]);
-        // print(v[1]);
-        this->v = std::move(v);
-        // print(this->v[0]);
-        // print(this->v[1]);
-        dataReceived = true;
-    }
+    // void onDataRecv(FLOAT_VEC v){
+    //     // print("RECEVD DATA");
+    //     // print(v.size());
+    //     // print(v[0]);
+    //     // print(v[1]);
+    //     this->v = std::move(v);
+    //     // print(this->v[0]);
+    //     // print(this->v[1]);
+    //     dataReceived = true;
+    // }
 
     void makeReady(){
-        glBindTexture(GL_TEXTURE_2D, texture);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, (size + 1), (size + 1), 0, GL_RED, GL_FLOAT, v.data());
-        glGenerateMipmap(GL_TEXTURE_2D);
-        glBindTexture(GL_TEXTURE_2D, 0);
+        // glBindTexture(GL_TEXTURE_2D, texture);
+        // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        // glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, (size), (size), 0, GL_RED, GL_FLOAT, v.data());
+        // glGenerateMipmap(GL_TEXTURE_2D);
+        // glBindTexture(GL_TEXTURE_2D, 0);
 
-        glBindTexture(GL_TEXTURE_2D, normalTexture);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        // glBindTexture(GL_TEXTURE_2D, normalTexture);
+        // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, size, size, 0, GL_RGB, GL_FLOAT, normals.data());
+        // glGenerateMipmap(GL_TEXTURE_2D);
+        // glBindTexture(GL_TEXTURE_2D, 0);
+
+        glBindTexture(GL_TEXTURE_2D, texture);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, size, size, 0, GL_RGB, GL_FLOAT, normals.data());
-        glGenerateMipmap(GL_TEXTURE_2D);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, size, size, 0, GL_RGBA, GL_FLOAT, height_and_normals.data());
         glBindTexture(GL_TEXTURE_2D, 0);
 
         isReady = true;
@@ -231,8 +242,8 @@ public:
 private:
     bool isReady = false;
     bool dataReceived = false;
-    FLOAT_VEC v;
-    VEC3_VEC normals;
+    // FLOAT_VEC v;
+    VEC4_VEC height_and_normals;
     UI size;
     float scale;
 };
