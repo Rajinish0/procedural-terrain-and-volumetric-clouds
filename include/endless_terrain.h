@@ -12,6 +12,8 @@
 #include <functional>
 #include "debug.h"
 #include "engine_consts.h"
+#include "lrucache.h"
+#include <memory>
 
 
 const int SIZE = 241;
@@ -185,12 +187,17 @@ void requestChunkData(int size, glm::vec2 center, std::function<void(_chunkData)
     ).detach();
 }
 
+struct pair_hash {
+    template <typename T1, typename T2>
+    std::size_t operator()(const std::pair<T1, T2>& p) const {
+        return std::hash<T1>{}(p.first) ^ (std::hash<T2>{}(p.second) << 1);
+    }
+};
 
 class HeightMapWrapper{
 
 public:
     GLuint texture;
-    GLuint normalTexture;
     glm::vec2 center;
 
     // HeightMapWrapper(int size, glm::vec2 center)
@@ -217,36 +224,8 @@ public:
         dataReceived = true;
     }
 
-    // void onDataRecv(FLOAT_VEC v){
-    //     // print("RECEVD DATA");
-    //     // print(v.size());
-    //     // print(v[0]);
-    //     // print(v[1]);
-    //     this->v = std::move(v);
-    //     // print(this->v[0]);
-    //     // print(this->v[1]);
-    //     dataReceived = true;
-    // }
 
     void makeReady(){
-        // glBindTexture(GL_TEXTURE_2D, texture);
-        // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        // glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, (size), (size), 0, GL_RED, GL_FLOAT, v.data());
-        // glGenerateMipmap(GL_TEXTURE_2D);
-        // glBindTexture(GL_TEXTURE_2D, 0);
-
-        // glBindTexture(GL_TEXTURE_2D, normalTexture);
-        // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, size, size, 0, GL_RGB, GL_FLOAT, normals.data());
-        // glGenerateMipmap(GL_TEXTURE_2D);
-        // glBindTexture(GL_TEXTURE_2D, 0);
-
         glBindTexture(GL_TEXTURE_2D, texture);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -256,6 +235,8 @@ public:
         glBindTexture(GL_TEXTURE_2D, 0);
 
         isReady = true;
+
+        height_and_normals.clear();
     }
 
     void update(){
@@ -273,8 +254,12 @@ public:
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, texture);
 
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, normalTexture);
+        // glActiveTexture(GL_TEXTURE2);
+        // glBindTexture(GL_TEXTURE_2D, normalTexture);
+    }
+
+    ~HeightMapWrapper(){
+        glDeleteTextures(1, &texture);
     }
 
 
@@ -289,7 +274,7 @@ private:
 
 namespace E_T_TYPES{
     using PAIR_MESH_MAP     = std::map<IIPAIR, Mesh*>;
-    using PAIR_HEIGHT_MAP   = std::map<IIPAIR, HeightMapWrapper*>;
+    using PAIR_HEIGHT_MAP   = std::unordered_map<IIPAIR, HeightMapWrapper*, pair_hash>;
     using MESH_VEC          = std::vector<Mesh>;
 }
 
@@ -300,7 +285,7 @@ public:
     Mesh m1 = funcs::genPlane2(SIZE, 1);
 
     EndlessTerrain(Camera& player, int size = SIZE, float scale = SCALE)
-        :player(player), size(size), chunkSize(size - 1), scale(scale)
+        :player(player), size(size), chunkSize(size - 1), scale(scale), history(150)
     {
         proj = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 200.0f);
         for (int i = 1; i <= LODs; i += LOD_INC){
@@ -310,39 +295,41 @@ public:
         }
     }
 
+    // ~EndlessTerrain(){
+    //     for (auto& [k, v] : history){
+    //         delete v;
+    //     }
+    //     history.clear();
+    // }
+
     void update(){
     }
 
     void draw(Shader& shader){
-        // shader.use();
-        // shader.setMatrix("proj", proj);
-        // shader.setMatrix("view", player.getView());
-        // shader.setMatrix("model", glm::mat4(1.0f));
-        // LODMeshes[0].draw(shader);
-// Assuming scale is defined and player.position is a glm::vec3 or similar
-// float scale = /* your scale value */;
-        // size = 
+        /*
+        TO DO:
+            do the frustum culling here, it's not good drawing the chunks behind the player,
+            get the camera and do the frustum culling based on which chunks are visible.
+        */
         int gridSize = scale / 2.0f; // Size of each grid cell in terms of player coordinates
 
         int x = std::floor((player.position.x + gridSize) / scale);
         int y = std::floor((player.position.z + gridSize) / scale);
 
-    //    std::cout << "Px: " << player.position.x << " Py: " 
-    //              << player.position.z << " x: " << x 
-    //              << " y: " << y << std::endl;;
-        for (int di =-3; di <=3; ++di){
-            for (int dj =-3; dj <=3; ++dj){
+        for (int di =-5; di <=5; ++di){
+            for (int dj =-5; dj <=5; ++dj){
                 int ni = y + di,
                     nj = x + dj;
 
-                if (history.count( {ni, nj} ) == 0)
-                    history[{ni, nj}] = new HeightMapWrapper(size, glm::vec2((float)nj *chunkSize, (float)ni * chunkSize));
+                if (history.count( {ni, nj} ) == 0){
+                    // std::cout << "INSERTING " << std::endl;
+                    history.insert({ni, nj}, std::make_shared<HeightMapWrapper>(size, glm::vec2((float)nj *chunkSize, (float)ni * chunkSize)));
+                    // std::cout << "INSERTED " << std::endl;
+                }
 
-                HeightMapWrapper *chunk = history[{ni, nj}];
+                std::shared_ptr<HeightMapWrapper> chunk = history[{ni, nj}];
                 chunk->update();
                 if (chunk->ready()){
-                    // print(chunk->center.x);
-                    // print(chunk->center.y);
                     shader.use();
                     glm::mat4 model(1.0f);
                     model = glm::translate(model, glm::vec3((float)nj * scale, 0.0f, (float)ni * scale ));
@@ -352,7 +339,6 @@ public:
                     shader.setInt("normalMap", 2);
                     chunk->bind();
                     LODMeshes[(std::max(std::abs(di), std::abs(dj)))/2.0f].draw(shader);
-                // m1.draw(shader);
                 }
             }
         }
@@ -367,7 +353,9 @@ private:
     TO DO:
         use LRUCache with capacity ~ 100 for history
     */
-    E_T_TYPES::PAIR_HEIGHT_MAP history;
+    // E_T_TYPES::PAIR_HEIGHT_MAP history;
+    
+    LRUCache<IIPAIR, std::shared_ptr<HeightMapWrapper>, pair_hash> history;
     float scale;
 };
 

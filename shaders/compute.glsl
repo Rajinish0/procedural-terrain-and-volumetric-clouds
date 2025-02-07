@@ -461,8 +461,8 @@ vec3 rayMarch(Ray r, vec3 backgroundColor, vec3 skyColBase, float depth){
                 // float lum = density * phase;
                 // trans *= lightT;
                 // lightEnergy += trans * lum;
-                vec3 directLight = lightT * phase * sunColor;
-                vec3 totalLight = ambientLight * 0.4 + .9 * directLight;
+                // vec3 directLight = lightT * phase * sunColor;
+                // vec3 totalLight = ambientLight * 0.4 + .9 * directLight;
                 // lightEnergy += density * stepSize * trans * totalLight;
                 lightEnergy += density * stepSize * trans * lightT * phase;
                 trans *= exp(-density * stepSize * SIGMA);

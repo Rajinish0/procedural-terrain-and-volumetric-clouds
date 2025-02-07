@@ -657,12 +657,12 @@ unsigned int cubeIndices[] = {
 };
 
 
-float densityThreshold = .420003f;
-float scale 		   = .595005f;
-float weatherScale     = .0001f;
-float higherScale 	   =  15.0f;
-float SIGMA 		   = 0.05f;
-float HG			   = 0.1f;
+float densityThreshold = REngine::DENSITY_THRESHOLD;
+float scale 		   = REngine::SCALE;
+float weatherScale     = REngine::WEATHER_SCALE;
+float higherScale 	   = REngine::HIGHER_SCALE;
+float SIGMA 		   = REngine::SIGMA;
+float HG			   = REngine::HG;
 
 float noise[800 * 600];
 Perlin2d perlin;
@@ -1040,6 +1040,10 @@ int main() {
 			cam.position.z +(float)glfwGetTime()*10.0f
 		));
 
+
+		// std::cout << "DENSITY THRESHOLD: " << densityThreshold << std::endl;
+		// std::cout << "SIGMA: " 			   << SIGMA << std::endl;
+		// std::cout << "HG: " 			   << HG << std::endl;
 		
 		glDisable(GL_BLEND);
 		glActiveTexture(GL_TEXTURE0);

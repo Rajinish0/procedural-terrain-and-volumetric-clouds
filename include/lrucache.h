@@ -6,9 +6,9 @@
 #include <optional>
 #include <ostream>
 
-#define DEBUG
+//#define DEBUG
 
-template <class Key, class Val>
+template <typename Key, typename Val>
 struct Node{
 	Key key;
 	Val val;
@@ -22,7 +22,7 @@ struct Node{
 
 
 #ifdef DEBUG
-template <class Key, class Val>
+template <typename Key, typename Val>
 std::ostream& operator<<(std::ostream& stream, const Node<Key, Val>& node){
 	stream << '(' << node.key << ':' << node.val << ')' 
 		   << std::endl;
@@ -31,19 +31,19 @@ std::ostream& operator<<(std::ostream& stream, const Node<Key, Val>& node){
 #endif
 
 
-template <class Key, class Val>
+template <typename Key, typename Val, class hashfunc>
 class LRUCache{
 public:
-	std::unordered_map<Key, Node<Key, Val>*> hashmap;
+	std::unordered_map<Key, Node<Key, Val>*, hashfunc> hashmap;
 	LRUCache(int capacity)
 		:capacity(capacity){}
 
-	std::optional<Val> operator[](const Key k){
-		if (count(k) != 0){
-			get(k);
-			return hashmap[k]->val;
-		}
-		return std::nullopt;
+	Val& operator[](const Key k){
+		// if (count(k) != 0){
+		get(k);
+		return hashmap[k]->val;
+		// }
+		// return std::nullopt;
 	}
 
 	void insert(Key k, Val v){
@@ -64,7 +64,10 @@ public:
 	}
 
 	size_t count(Key k){
-		return hashmap.count(k);
+		// std::cout << " GOT CALLED " << std::endl;
+		size_t v =  hashmap.count(k);
+		// std::cout << " GOT CALLED: " << v << std::endl;
+		return v;
 	}
 
 	~LRUCache(){
