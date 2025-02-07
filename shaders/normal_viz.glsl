@@ -7,7 +7,7 @@ in VS_OUT{
 	vec3 normal;
 } vs_out[];
 
-const float MAG = 0.1;
+const float MAG = 1.;
 
 out vec3 normal;
 

@@ -661,8 +661,8 @@ float densityThreshold = .420003f;
 float scale 		   = .595005f;
 float weatherScale     = .0001f;
 float higherScale 	   =  15.0f;
-float SIGMA 		   = 0.9f;
-float HG			   = 0.3f;
+float SIGMA 		   = 0.05f;
+float HG			   = 0.1f;
 
 float noise[800 * 600];
 Perlin2d perlin;
@@ -895,7 +895,7 @@ int main() {
 
 	computeShdr.use();
 	computeShdr.setVec3("camPos", cam.position);
-	computeShdr.setVec3("bounding_rect.pos", glm::vec3(0.0f, 65.5f, 0.0f));
+	computeShdr.setVec3("bounding_rect.pos", glm::vec3(0.0f, 130.5f, 0.0f));
 	computeShdr.setVec3("bounding_rect.dims", glm::vec3(400.0f, 200.0f, 400.0f));
 	computeShdr.setFloat("near", near);
 	computeShdr.setFloat("far", far);
@@ -938,6 +938,14 @@ int main() {
 			glm::radians(0.1f), 
 			glm::vec3(0.0f, 1.0f, 0.0f)) * glm::vec4(lightPos, 0.0f);
 
+		glm::vec3 sunD = glm::normalize(glm::vec3(
+			//std::cos(glfwGetTime()), 
+			0.0f,
+			1.0f,
+			// std::sin(glfwGetTime())
+			-2.0f
+		));
+
 		fbo.Bind();
 
 		// glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
@@ -946,6 +954,7 @@ int main() {
 		shader4.setMatrix("proj", proj);
 		shader4.setMatrix("view", cam.getView());
 		shader4.setFloat("maxHeight", REngine::MAX_TERRAIN_HEIGHT);
+		shader4.setVec3("sunDirection", sunD);
 		terr.draw(shader4);
 
 		#if DRAW_NORMALS
@@ -1024,11 +1033,11 @@ int main() {
 			glm::inverse(view)
 		);
 		computeShdr.setVec3("camPos", cam.position);
-		computeShdr.setVec3("bounding_rect.pos", glm::vec3(cam.position.x, 100.5f, cam.position.z));
+		computeShdr.setVec3("bounding_rect.pos", glm::vec3(cam.position.x, 135.5f, cam.position.z));
 		computeShdr.setVec3("offSet", glm::vec3(
-			0.0f, 
+			cam.position.x, 
 			0.0f,
-			(float)glfwGetTime()
+			cam.position.z +(float)glfwGetTime()*10.0f
 		));
 
 		
@@ -1046,6 +1055,7 @@ int main() {
 		computeShdr.setFloat("higherScale", higherScale);
 		computeShdr.setFloat("SIGMA", SIGMA);
 		computeShdr.setFloat("HG", HG);
+		computeShdr.setVec3("sunDirection", sunD);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, fbo.textureId);
         glActiveTexture(GL_TEXTURE2);
@@ -1103,16 +1113,16 @@ void processInput(GLFWwindow* window)
 		glfwSetWindowShouldClose(window, true);
 
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-		cam.move(Camera::UP, dt*2.0);
+		cam.move(Camera::UP, dt*10.0f);
 
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-		cam.move(Camera::DOWN, dt*2.0);
+		cam.move(Camera::DOWN, dt*10.0f);
 
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-		cam.move(Camera::RIGHT, dt*2.0);
+		cam.move(Camera::RIGHT, dt*10.0f);
 
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-		cam.move(Camera::LEFT, dt*2.0);
+		cam.move(Camera::LEFT, dt*10.0f);
 
 	if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
 		densityThreshold += 0.001f;
@@ -1148,26 +1158,26 @@ void processInput(GLFWwindow* window)
 		SIGMA -= 0.001f;
 
 	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-		cam.incYaw(-cam.sensitivity);
-		// cam.yaw -= cam.sensitivity;
+		cam.incYaw(-cam.sensitivity*3.0f);
+		// cam.yaw -= cam.sensitivity*3.0f;
 		// cam.updateDirection();
 	}
 
 	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-		cam.incYaw(cam.sensitivity);
-		// cam.yaw += cam.sensitivity;
+		cam.incYaw(cam.sensitivity*3.0f);
+		// cam.yaw += cam.sensitivity*3.0f;
 		// cam.updateDirection();
 	}
 
 	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-		// cam.pitch += cam.sensitivity;
-		cam.incPitch(cam.sensitivity);
+		// cam.pitch += cam.sensitivity*3.0f;
+		cam.incPitch(cam.sensitivity*3.0f);
 		// cam.updateDirection();
 	}
 
 	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-		cam.incPitch(-cam.sensitivity);
-		//cam.pitch -= cam.sensitivity;
+		cam.incPitch(-cam.sensitivity*3.0f);
+		//cam.pitch -= cam.sensitivity*3.0f;
 		// cam.updateDirection();
 	}
 }

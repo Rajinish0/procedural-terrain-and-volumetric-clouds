@@ -18,7 +18,7 @@ const int SIZE = 241;
 const int chunkSize = SIZE - 1;
 const int LODs = 12;
 const int LOD_INC = 2;
-const float SCALE = 10.0f;
+const float SCALE = 50.0f;
 
 // struct ChunkData{
 //     FLOAT_VEC heighData;
@@ -42,7 +42,7 @@ _chunkData generateChunkData(int size, glm::vec2 center = glm::vec2(0.0f)){
 	float tlX = (size - 1)/-2.0f;
 	float tlY = (size - 1)/2.0f;
 	float x, y;
-	float scale = (10.0f/chunkSize)/5.0f;
+	float scale = (SCALE/chunkSize)/100.0f;
     Perlin2d perlin(256, 8);
 	for (int i =-1; i < size + 1; ++i){
 		for (int j =-1; j < size + 1; ++j){
@@ -330,8 +330,8 @@ public:
     //    std::cout << "Px: " << player.position.x << " Py: " 
     //              << player.position.z << " x: " << x 
     //              << " y: " << y << std::endl;;
-        for (int di =-2; di <=2; ++di){
-            for (int dj =-2; dj <=2; ++dj){
+        for (int di =-3; di <=3; ++di){
+            for (int dj =-3; dj <=3; ++dj){
                 int ni = y + di,
                     nj = x + dj;
 

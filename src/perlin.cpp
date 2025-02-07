@@ -1,5 +1,5 @@
 #include "perlin.h"
-
+#include <random>
 
 float Perlin1d::g(float a) {
 	return (1 - std::cos(M_PI * a))/2;
@@ -76,7 +76,12 @@ myVector myVector::normalized() {
 }
 
 myVector myVector::rand() {
-	float ang = static_cast <float> (std::rand()) / ((static_cast <float> (RAND_MAX)) / (2 * M_PI));
+	// float ang = static_cast <float> (std::rand()) / ((static_cast <float> (RAND_MAX)) / (2 * M_PI));
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_real_distribution<float> dis(0.0f, 2 * M_PI);
+	float ang = dis(gen);
+
 	return myVector(std::cos(ang), std::sin(ang));
 	//return myVector(std::rand(), std::rand()).normalized(); // bad
 }

@@ -19,6 +19,8 @@ uniform vec2 offset;
 uniform sampler2D heightMap;
 uniform sampler2D normalMap;
 
+uniform float maxHeight;
+
 out vec3 col;
 out vec2 tCoord;
 
@@ -37,16 +39,16 @@ void main(){
     // vec2 heightTexCoord2 = (vec2(aPos.x + 1, -aPos.z) + vec2( float(size)/2.0f,  float(size)/2.0f)) / size;
     // vec2 heightTexCoord3 = (vec2(aPos.x, -(aPos.z + 1)) + vec2( float(size)/2.0f,  float(size)/2.0f)) / size;
 
-    // float y = texture(heightMap, texCoord).r * 65.0f;
-    // float y2 = texture(heightMap, heightTexCoord2).r * 65.0f;
-    // float y3 = texture(heightMap, heightTexCoord3).r * 65.0f;
+    // float y = texture(heightMap, texCoord).r * maxHeight;
+    // float y2 = texture(heightMap, heightTexCoord2).r * maxHeight;
+    // float y3 = texture(heightMap, heightTexCoord3).r * maxHeight;
 
     // vec3 v1 = vec3(aPos.x, y, aPos.z);
     // vec3 v2 = vec3(aPos.x + 1, y2, aPos.z);
     // vec3 v3 = vec3(aPos.x, y3, aPos.z + 1);
 
     vec4 info = texture(heightMap, texCoord);
-    float y = info.r * 65.0f;
+    float y = info.r * maxHeight;
     // vec3 cp = cross(v3 - v1, v2 - v1);
     // cp = cp / length(cp);
     vec3 cp = info.gba * 2.0 - 1.0;
