@@ -567,6 +567,8 @@
 
 
 // #define DRAW_NORMALS 1
+// #define LINE_MODE 1
+
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
@@ -948,7 +950,9 @@ int main() {
 
 		fbo.Bind();
 
-		// glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
+		#if LINE_MODE
+		glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
+		#endif
 
 		shader4.use();
 		shader4.setMatrix("proj", proj);
@@ -1023,7 +1027,9 @@ int main() {
 		// );
 		// textRenderer.renderText(textShdr, "HELLO", 400.0f, 300.0f, 1.0f, glm::vec3(1.0f, 0.0f, 0.0f), TextRenderer::CENTER);
 
-		// glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		#if LINE_MODE
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		#endif
 
 		fbo.unBind();
 

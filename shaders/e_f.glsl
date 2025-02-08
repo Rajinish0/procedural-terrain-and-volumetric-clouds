@@ -15,14 +15,14 @@ uniform sampler2D texture_diffuse1;
 out vec4 fragcol;
 
 vec3 applyFog(vec3 originalColor, float distance) {
-    // float fogDensity = 0.091; // Adjust this value to increase or decrease fog intensity
+    // float fogDensity = 0.00001; // Adjust this value to increase or decrease fog intensity
     // float fogFactor = exp(-fogDensity * distance);
     
     // vec3 fogColor = skycolor; // The color of the fog
     // return mix(originalColor, fogColor, 1.0 - fogFactor);
 
-    float fogAmt = 1.0 - exp(-distance*.05);
-    vec3 fogColor = vec3(0.5, 0.6, 0.7);
+    float fogAmt = 1.0 - exp(-distance*.005);
+    vec3 fogColor = vec3(0.529,0.708,0.922);//vec3(0.5, 0.6, 0.7);
     return mix(originalColor, fogColor, fogAmt);
 }
 
@@ -73,7 +73,7 @@ void main(){
     lin += backlight*vec3(0.4, .5, .6);
     color *= lin;
     color *= (.6 + .4*smoothstep(400., 100., abs(fragpos.z)));
-
+    color = applyFog(color, dist);
     fragcol =  vec4(color, 1.0f);
 
     /* IMPL 3.0 */
