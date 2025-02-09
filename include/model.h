@@ -5,7 +5,9 @@
 #include "funcs.h"
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
+#include <map>
 #include <assimp/postprocess.h>
+#include <unordered_map>
 
 
 class Model {
@@ -20,7 +22,7 @@ private:
 	void loadModel(std::string path);
 	void processNode(aiNode* node, const aiScene* scene);
 	Mesh processMesh(aiMesh* mesh, const aiScene* scene);
-	std::vector<Texture> cachedTextures;
+	std::unordered_map<std::string, Texture> cachedTextures;
 	std::vector<Texture> loadMaterialTextures(aiMaterial* mat, aiTextureType type, Texture::Type typeName);
 };
 

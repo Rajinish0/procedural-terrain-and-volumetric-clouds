@@ -411,7 +411,8 @@ float HenyeyGreenstein(float g, float mu) {
 #define CLOUDS_AMBIENT_COLOR_TOP (vec3(149., 167., 200.)*(1.5/255.))
 #define CLOUDS_AMBIENT_COLOR_BOTTOM (vec3(39., 67., 87.)*(1.5/255.))
 
-vec3 sunColor = vec3(1.0, 0.95686275, 0.839215);
+vec3 sunColor = vec3(1.0);//vec3(1.0, 0.95686275, 0.839215);
+// sunColor = vec3(1.0f);
 
 uniform float HG = .3;
 
@@ -450,7 +451,8 @@ vec3 rayMarch(Ray r, vec3 backgroundColor, vec3 skyColBase, float depth){
                 // color.rgb *= color.a;
                 // col += color * (1.0-col.a);
 
-                vec3 ambientLight = mix( CLOUDS_AMBIENT_COLOR_BOTTOM, CLOUDS_AMBIENT_COLOR_TOP, heighFraction );
+                // vec3 ambientLight = mix( CLOUDS_AMBIENT_COLOR_BOTTOM, CLOUDS_AMBIENT_COLOR_TOP, heighFraction );
+                vec3 ambientLight = CLOUDS_AMBIENT_COLOR_TOP;
                 // vec3 S = (ambientLight + sunColor * (phase * lightMarch(p, boundsMin, boundsMax))) * density;
                 // float dTrans = exp(-density * SIGMA * stepSize);
                 // vec3 Sint = (S - S * dTrans) * (1. / density);
@@ -462,7 +464,7 @@ vec3 rayMarch(Ray r, vec3 backgroundColor, vec3 skyColBase, float depth){
                 // trans *= lightT;
                 // lightEnergy += trans * lum;
                 // vec3 directLight = lightT * phase * sunColor;
-                // vec3 totalLight = ambientLight * 0.4 + .9 * directLight;
+                // vec3 totalLight = ambientLight + .9 * directLight;
                 // lightEnergy += density * stepSize * trans * totalLight;
                 lightEnergy += density * stepSize * trans * lightT * phase;
                 trans *= exp(-density * stepSize * SIGMA);
@@ -479,20 +481,21 @@ vec3 rayMarch(Ray r, vec3 backgroundColor, vec3 skyColBase, float depth){
         // return backgroundColor.rgb * (1-col.a) + col.rgb;
     }
 
-    // float dstFog = 1-exp(-max(0, depth) * 8 * .0001);
-    // vec3 sky = dstFog * skyColBase;
-    // backgroundColor = backgroundColor;// * (1-dstFog) + sky;
+    float dstFog = 1-exp(-max(0, depth) * 8 * .0001);
+    vec3 sky = dstFog * skyColBase;
+    backgroundColor = backgroundColor;// * (1-dstFog) + sky;
 
-    // float focusedEyeCos = pow(saturate(dot(r.dir, sunDirection)), 1);
+    float focusedEyeCos = pow(saturate(dot(r.dir, sunDirection)), 1);
     // float sun =saturate(
-    //     HenyeyGreenstein(.9995, focusedEyeCos) * trans
+    //     HenyeyGreenstein(.99995, focusedEyeCos) * trans
     // );
 
-    // vec3 cloudCol = lightEnergy * sunColor;
+    // vec3 cloudCol = lightEnergy;
     // col = backgroundColor * trans + cloudCol;
     // col = clamp(col, 0.0, 1.0) * (1-sun) + sunColor * sun;
-
-    col = backgroundColor*trans + lightEnergy;
+    
+    trans = clamp(trans, 0.0, 1.0);
+    col =  backgroundColor * trans + lightEnergy * sunColor;
 
     return col;
 }

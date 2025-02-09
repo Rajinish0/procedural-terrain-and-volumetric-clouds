@@ -1,9 +1,15 @@
+#pragma once
 #include "Mesh.h"
 #include "funcs.h"
 #include <exception>
 
+Mesh::Mesh(std::vector<Vertex> verticies, std::vector<Texture> textures, std::vector<unsigned int> indicies, Material material)
+	:verticies(verticies), textures(textures), indicies(indicies), material(material) {
+	this->setUpMesh();
+}
+
 Mesh::Mesh(std::vector<Vertex> verticies, std::vector<Texture> textures, std::vector<unsigned int> indicies)
-	:verticies(verticies), textures(textures), indicies(indicies) {
+	:verticies(verticies), textures(textures), indicies(indicies){
 	this->setUpMesh();
 }
 
@@ -11,6 +17,7 @@ Mesh::Mesh(Mesh&& other) noexcept
 	:verticies(std::move(other.verticies)),
 	 textures(std::move(other.textures)),
 	 indicies(std::move(other.indicies)),
+	 material(std::move(other.material)),
 	 VAO(other.VAO), EBO(other.EBO), VBO(other.VBO)
 	 {
 		other.VAO = other.EBO = other.VBO =0;
@@ -24,6 +31,7 @@ Mesh& Mesh::operator=(Mesh&& other) noexcept{
 		verticies = std::move(other.verticies);
 		textures  = std::move(other.textures);
 		indicies  = std::move(other.indicies);
+		material  = std::move(other.material);
 		VAO = other.VAO;
 		VBO = other.VBO;
 		EBO = other.EBO;
@@ -88,10 +96,11 @@ void Mesh::setUpMesh() {
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 }
-
-// Mesh::~Mesh(){
-// 	clearResources();
-// }
+/*
+Mesh::~Mesh(){
+	clearResources();
+}
+*/
 
 void Mesh::clearResources(){
 	if (VAO){
@@ -112,14 +121,16 @@ void Mesh::draw(Shader& shader) {
 	shader.use();
 	int textureDiff = 0;
 	int textureSpec = 0;
+	shader.setFloat("opacity", material.opacity);
 	for (int i = 0; i < textures.size(); ++i) {
 		glActiveTexture(GL_TEXTURE0 + i);
 		glBindTexture(GL_TEXTURE_2D, textures[i].id);
 		if (textures[i].type == Texture::DIFFUSE) {
+			// std::cout << "SETTING: " << textures[i].path << " op to: " << textures[i].opacity << std::endl;
 			shader.setInt("texture_diffuse" + std::to_string(++textureDiff), i);
 		}
 		else if (textures[i].type == Texture::SPECULAR) {
-			shader.setInt("texture_specular" + std::to_string(++textureSpec), i);
+			shader.setInt("texture_specular"+ std::to_string(++textureSpec), i);
 		}
 		else {
 			throw InvalidTexture("Unrecognized texture type");
@@ -129,3 +140,4 @@ void Mesh::draw(Shader& shader) {
 	glBindVertexArray(VAO);
 	glDrawElements(GL_TRIANGLES, indicies.size(), GL_UNSIGNED_INT, 0);
 }
+

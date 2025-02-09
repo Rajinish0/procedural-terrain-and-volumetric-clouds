@@ -44,7 +44,7 @@ _chunkData generateChunkData(int size, glm::vec2 center = glm::vec2(0.0f)){
 	float tlX = (size - 1)/-2.0f;
 	float tlY = (size - 1)/2.0f;
 	float x, y;
-	float scale = (SCALE/chunkSize)/100.0f;
+	float scale = (SCALE/chunkSize)/200.0f;
     Perlin2d perlin(256, 8);
 	for (int i =-1; i < size + 1; ++i){
 		for (int j =-1; j < size + 1; ++j){
@@ -299,7 +299,7 @@ public:
     //     for (auto& [k, v] : history){
     //         delete v;
     //     }
-    //     history.clear();
+    //     // history.clear();
     // }
 
     void update(){
@@ -333,7 +333,7 @@ public:
                     shader.use();
                     glm::mat4 model(1.0f);
                     model = glm::translate(model, glm::vec3((float)nj * scale, 0.0f, (float)ni * scale ));
-                    model = glm::scale(model, glm::vec3(scale/float(chunkSize)));
+                    model = glm::scale(model, glm::vec3(scale/float(chunkSize), 1.0f, scale/float(chunkSize)));
                     shader.setMatrix("model", model);
                     shader.setInt("heightMap", 1);
                     shader.setInt("normalMap", 2);

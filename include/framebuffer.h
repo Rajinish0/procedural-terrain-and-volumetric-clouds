@@ -58,6 +58,7 @@ public:
         glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 		glEnable(GL_DEPTH_TEST);
 		glClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
+        // glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
 

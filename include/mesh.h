@@ -9,7 +9,6 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include "g_types.h"
 
 
 struct Vertex {
@@ -17,6 +16,10 @@ struct Vertex {
 	glm::vec3 normal;
 	glm::vec2 texCoord;
 
+};
+
+struct Material{
+	float opacity = 1.0f;
 };
 
 struct Texture {
@@ -40,12 +43,15 @@ struct Texture {
 			GLuint T_WRAP = GL_REPEAT);
 };
 
+
 class Mesh {
 public:
 	std::vector<Vertex> verticies;
 	std::vector<Texture> textures;
 	std::vector<unsigned int> indicies;
+	Material material;
 	
+	Mesh(std::vector<Vertex> verticies, std::vector<Texture> textures, std::vector<unsigned int> indicies, Material);
 	Mesh(std::vector<Vertex> verticies, std::vector<Texture> textures, std::vector<unsigned int> indicies);
 	Mesh(Mesh&&) noexcept;
 
@@ -55,8 +61,12 @@ public:
 	Mesh& operator=(Mesh&&) noexcept;
 	void draw(Shader& shader);
 	unsigned int VAO, VBO, EBO;
-
-	// ~Mesh();
+ 	/*
+	 * TO DO:
+	 * 	this is being called unexpectedly sometimes, need to 
+	 * 	debug this.
+	 */
+//	~Mesh();
 
 private:
 	void setUpMesh();

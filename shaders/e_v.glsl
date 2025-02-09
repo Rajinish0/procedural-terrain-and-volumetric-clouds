@@ -84,6 +84,7 @@ void main(){
     //     col = vec3(0.0f, 0.0f, 0.0f);
 
     vec4 worldPos = model*vec4(aPos.x, y, aPos.z, 1.0);
+    gl_ClipDistance[0] = dot(worldPos, planeNorm);
     fragpos = worldPos.xyz;
     vec4 viewPos = view * worldPos;
     dist = length(viewPos.xyz);

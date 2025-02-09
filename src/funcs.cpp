@@ -40,7 +40,7 @@ namespace funcs{
 			stbi_image_free(data);
 		}
 		else
-			std::cerr << "Couldn't load texture" << std::endl;
+			std::cerr << "Couldn't load texture: " << directory << '/' << path << std::endl;
 		return id;
 	}
 

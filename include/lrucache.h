@@ -76,6 +76,7 @@ public:
 		hashmap.clear(); // not necessary
 	}
 
+
 private:
 	Node<Key, Val> *currentNode =nullptr;
 	Node<Key, Val> *lastNode =nullptr;

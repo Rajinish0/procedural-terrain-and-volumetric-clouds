@@ -47,7 +47,7 @@ void main(){
     // fragcol = mix(fragcol, vec4(0.0, 0.3, 0.5, 1.0), 0.2);
     vec3 tempcol = mix(texture(t1, reflect_c), texture(t2, refrect_c), d).xyz;
     tempcol = mix(tempcol, vec3(0.0, 0.3, 0.5), 0.2);
-    tempcol = mix(tempcol, skycolor, alpha);
+    // tempcol = mix(tempcol, skycolor, alpha);
     // tempcol = (1-alpha)*tempcol + alpha*skycolor;
     fragcol = vec4(tempcol, 1.0f);
 }
