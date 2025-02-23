@@ -47,49 +47,54 @@ glm::mat4 Camera::getView() {
 	return rotat*trans;
 }
 void Camera::handleMovement(GLFWwindow* window, float dt) {
-	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-		position += direction * dt;
+	// if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+	// 	position += direction * dt;
 
-	else if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-		position -= direction * dt;
+	// else if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+	// 	position -= direction * dt;
 
-	else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-		position += getRight() * dt;
+	// else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+	// 	position += getRight() * dt;
 
-	else if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-		position -= getRight() * dt;
+	// else if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+	// 	position -= getRight() * dt;
 }
 
 void Camera::move(direc d, float dt) {
-	switch (d) {
-		case UP:
-			position += direction * dt;
-			break;
-		case DOWN:
-			position -= direction * dt;
-			break;
-		case RIGHT:
-			position += getRight() * dt;
-			break;
-		case LEFT:
-			position -= getRight() * dt;
-			break;
-	}
+	// switch (d) {
+	// 	case UP:
+	// 		position += direction * dt;
+	// 		break;
+	// 	case DOWN:
+	// 		position -= direction * dt;
+	// 		break;
+	// 	case RIGHT:
+	// 		position += getRight() * dt;
+	// 		break;
+	// 	case LEFT:
+	// 		position -= getRight() * dt;
+	// 		break;
+	// }
 }
 
 void Camera::incPitch(float increment) {
 	this->pitch += increment;
 	this->pitch = funcs::clamp(this->pitch, -45.0f, 45.0f);
 	updateDirection();
-	// this->pitch = funcs::clamp(this->pitch, -89.0f, 89.0f);
 }
 
 void Camera::incYaw(float increment) {
 	this->yaw += increment;
 	yaw = (yaw > 360) ? (yaw - 360) : (yaw < -360) ? yaw + 360 : yaw;
-	// this->yaw = funcs::clamp(this->yaw, -360.0f, 360.0f);
 	updateDirection();
-	//this->yaw = funcs::clamp(this->yaw, -360.0f, 360.0f);
+}
+
+void Camera::setPitch(float pitch){
+	this->pitch = funcs::clamp(pitch, -45.0f, 45.0f);
+}
+
+void Camera::setYaw(float yaw){
+	this->yaw = std::fmod(yaw, 360.0f);
 }
 
 void Camera::handleMouse(double xPos, double yPos) {

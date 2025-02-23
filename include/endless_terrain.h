@@ -5,6 +5,7 @@
 #include "g_types.h"
 #include "mesh.h"
 #include "funcs.h"
+#include "debug.h"
 #include "perlin.h"
 #include "camera.h"
 #include <thread>
@@ -14,6 +15,8 @@
 #include "engine_consts.h"
 #include "lrucache.h"
 #include <memory>
+#include <future>
+
 
 
 const int SIZE = 241;
@@ -187,6 +190,7 @@ void requestChunkData(int size, glm::vec2 center, std::function<void(_chunkData)
     ).detach();
 }
 
+
 struct pair_hash {
     template <typename T1, typename T2>
     std::size_t operator()(const std::pair<T1, T2>& p) const {
@@ -237,6 +241,7 @@ public:
         isReady = true;
 
         height_and_normals.clear();
+        height_and_normals.shrink_to_fit();
     }
 
     void update(){
@@ -273,9 +278,10 @@ private:
 };
 
 namespace E_T_TYPES{
-    using PAIR_MESH_MAP     = std::map<IIPAIR, Mesh*>;
-    using PAIR_HEIGHT_MAP   = std::unordered_map<IIPAIR, HeightMapWrapper*, pair_hash>;
-    using MESH_VEC          = std::vector<Mesh>;
+    using PAIR_MESH_MAP         = std::map<IIPAIR, Mesh*>;
+    using PAIR_HEIGHT_MAP       = std::unordered_map<IIPAIR, HeightMapWrapper*, pair_hash>;
+    using PAIR_HEIGHT_LRU_CACHE = LRUCache<IIPAIR, std::shared_ptr<HeightMapWrapper>, pair_hash>;
+    using MESH_VEC              = std::vector<Mesh>;
 }
 
 class EndlessTerrain{
@@ -285,7 +291,7 @@ public:
     Mesh m1 = funcs::genPlane2(SIZE, 1);
 
     EndlessTerrain(Camera& player, int size = SIZE, float scale = SCALE)
-        :player(player), size(size), chunkSize(size - 1), scale(scale), history(150)
+        :player(player), size(size), chunkSize(size - 1), scale(scale), history(500)
     {
         proj = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 200.0f);
         for (int i = 1; i <= LODs; i += LOD_INC){
@@ -316,11 +322,15 @@ public:
         int x = std::floor((player.position.x + gridSize) / scale);
         int y = std::floor((player.position.z + gridSize) / scale);
 
-        for (int di =-5; di <=5; ++di){
-            for (int dj =-5; dj <=5; ++dj){
+        glm::vec3 dir = player.direction;
+        // printVec3(dir);
+
+        for (int di =-10; di <=10; ++di){
+            for (int dj =-10; dj <=10; ++dj){
                 int ni = y + di,
                     nj = x + dj;
-
+                
+                if (dir.x * dj + (dir.z)*(di) < 0.0f) continue;
                 if (history.count( {ni, nj} ) == 0){
                     // std::cout << "INSERTING " << std::endl;
                     history.insert({ni, nj}, std::make_shared<HeightMapWrapper>(size, glm::vec2((float)nj *chunkSize, (float)ni * chunkSize)));
@@ -338,7 +348,7 @@ public:
                     shader.setInt("heightMap", 1);
                     shader.setInt("normalMap", 2);
                     chunk->bind();
-                    LODMeshes[(std::max(std::abs(di), std::abs(dj)))/2.0f].draw(shader);
+                    LODMeshes[(std::max(std::abs(di), std::abs(dj)))/3.0f].draw(shader);
                 }
             }
         }
@@ -355,7 +365,8 @@ private:
     */
     // E_T_TYPES::PAIR_HEIGHT_MAP history;
     
-    LRUCache<IIPAIR, std::shared_ptr<HeightMapWrapper>, pair_hash> history;
+    // LRUCache<IIPAIR, std::shared_ptr<HeightMapWrapper>, pair_hash> history;
+    E_T_TYPES::PAIR_HEIGHT_LRU_CACHE history;
     float scale;
 };
 

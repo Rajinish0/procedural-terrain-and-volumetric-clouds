@@ -23,13 +23,14 @@ public:
 	double lxpos, lypos;
 	bool firstMouse = true;
 
-
 	void handleMovement(GLFWwindow *window, float dt);
 	void move(direc dir, float dt);
 	void handleMouse(double xPos, double yPos);
 	void updateDirection();
 	void incPitch(float increment);
 	void incYaw(float increment);
+	void setPitch(float pitch);
+	void setYaw(float yaw);
 	glm::vec3 getRight();
 	glm::mat4 getView();
 	Camera(float sensitivity = 0.1f);
