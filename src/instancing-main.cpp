@@ -1,3 +1,8 @@
+// #define DRAW_NORMALS 1
+// #define LINE_MODE 1
+// #define DRAW_WATER 1
+
+
 #include <iostream>
 #include "shader.h"
 #include "camera.h"
@@ -15,20 +20,20 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include "framebuffer.h"
-#include "endless_terrain.h"
 #include "compute_shader.h"
 #include "engine_consts.h"
 #include "textrender.h"
 #include "airplane.h"
 #include <ft2build.h> // checking if build was good
+#include "cloud_system.h"
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
+#include "dynamic_system.h"
 
-// #define DRAW_NORMALS 1
-// #define LINE_MODE 1
+
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -60,7 +65,7 @@ T randNum(T min, T max){
 }
 
 
-Camera cam;
+Camera camera;
 
 glm::vec3 lightPos = glm::vec3(-1.0f, 7.0f, 2.0f);
 
@@ -84,7 +89,7 @@ int main() {
 		std::cout << "Failed to initliaze GLAD" << std::endl;
 		return -1;
 	}
-	EndlessTerrain terr(cam);
+	// EndlessTerrain terr(camera);
 
 	 ComputeShader computeShdr {
 		"shaders/compute.glsl"
@@ -101,23 +106,16 @@ int main() {
 	Shader airPlaneShader{"shaders/model-vshader.glsl", "shaders/model-fshader.glsl"};
 	Texture dudv{"textures/dudv.png", Texture::DIFFUSE, GL_REPEAT, GL_REPEAT};
 
+	glm::vec3 sunD = glm::normalize(glm::vec3(
+		0.0f,
+		1.0f,
+		-2.0f
+	));
+
 	glEnable(GL_DEPTH_TEST);
 
 	FrameBuffer fbo, fb, fb2;
 	TextRenderer textRenderer;
-
-	unsigned int compT;
-	glGenTextures(1, &compT);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, compT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 800, 600, 0, GL_RGBA, 
-				GL_FLOAT, NULL);
-
-	glBindImageTexture(0, compT, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
 
 
 	glViewport(0, 0, 800, 600);
@@ -140,42 +138,26 @@ int main() {
 		glm::vec3(1.0f, 0.0f, 0.0f)
 	);
 
-	float sphereRad = 0.2f;
-	glm::mat4 sphereModel = glm::mat4(1.0f);
-	sphereModel = glm::translate(sphereModel, glm::vec3(-2 * sphereRad, sphereRad, 0.0f));
-	sphereModel = glm::scale(sphereModel, glm::vec3(sphereRad));
-
-	glm::mat4 sphereModel2 = glm::mat4(1.0f);
-	sphereModel2 = glm::translate(sphereModel2, glm::vec3(2 * sphereRad, sphereRad, 0.0f));
-	sphereModel2 = glm::scale(sphereModel2, glm::vec3(sphereRad));
-
 
 
 	invProj = glm::inverse(proj);
 	invView = glm::inverse(view);
-	cam.position = glm::vec3(0.0f);
-	Mesh sphere = funcs::genSphere();
+	camera.position = glm::vec3(0.0f);
+
+	shader4.use();
+	shader4.setMatrix("proj", proj);
+
+	airPlaneShader.use();
+	airPlaneShader.setMatrix("proj", proj);
+
+	shader5.use();
+	shader5.setMatrix("proj", proj);
 
 	computeShdr.use();
-	computeShdr.setVec3("camPos", cam.position);
-	computeShdr.setVec3("bounding_rect.pos", glm::vec3(0.0f, 130.5f, 0.0f));
-	computeShdr.setVec3("bounding_rect.dims", glm::vec3(400.0f, 200.0f, 400.0f));
-	computeShdr.setFloat("near", near);
-	computeShdr.setFloat("far", far);
 	computeShdr.setMatrix("invProjMat", glm::inverse(proj));
 	glm::vec3 lightPos(3.0f, 2.0f, 0.0f);
 
-	// fbo.setClearColor(glm::vec4(0.1f, 0.1f, 0.1f, 0.1f));
 	fbo.setClearColor(glm::vec4(0.529,0.708,0.922, 1.0f));
-	GLuint ntId = funcs::genWorleyNoise(50, 50, 50);
-	// GLuint weatherTextureId = funcs::loadWeatherData("weather_data.raw");
-	GLuint weatherTextureId = funcs::loadWeatherData("weather_data_2.raw");
-	GLuint detailTextureId = funcs::loadDetailTexture("low_res.raw");
-	GLuint highTexture = funcs::loadGeneric3dTexture("f_data_HIGH.raw");
-	std::cout << "LOADING WEATHER TEXTURE" << std::endl;
-	GLuint weatherDataTexure = funcs::loadGeneric2dTexture("weather_data_f.raw");
-	std::cout << "DONE loading textures" << std::endl;
-
 	glm::mat4 cubeModel = glm::translate(
 		glm::mat4(1.0f),
 		glm::vec3(3.0f, 0.0f, 0.0f)
@@ -183,12 +165,23 @@ int main() {
 
 	float waterHeight = 5.0f;
 	Plane plane;
-	Model airPlane {"models/plane/a22.obj"};
 	Airplane myAirPlane {"models/plane/a22.obj"};
 
 	myAirPlane.setPos(glm::vec3(0.0f, 40.0f, 0.0f));
-	myAirPlane.mount(&cam);
+	myAirPlane.mount(&camera);
 	myAirPlane.attach(&window);
+
+	DynamicSystem terrainSystem(camera, shader4, shader5, airPlaneShader, myAirPlane, REngine::MAX_TERRAIN_HEIGHT, sunD);
+	CloudSystem CloudSystem(
+		"f_data_HIGH.raw",
+		"low_res.raw",
+		"weather_data_2.raw",
+		camera,
+		computeShdr,
+		glm::vec3(400.0f, 200.0f, 400.0f),
+		near, far, cloudHeight, proj, 
+		sunD, fbo
+	);
 
 
 	ImGui::CreateContext();
@@ -210,43 +203,18 @@ int main() {
 		ImGui::NewFrame();
 
 
-		myAirPlane.update(1.0f/60.0f);
+		terrainSystem.update( 1.0f/60.0f );
 
-		// cam.up = 
-		// glm::normalize(
-		// glm::vec3(
-		// 	glm::rotate(
-		// 	glm::mat4(1.0f),
-		// 	glm::radians(planeRoll),
-		// 	glm::vec3(0.0f, 0.0f, 1.0f)
-		// ) * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f)
-		// ));
-		// cam.updateDirection();
+
 		glEnable(GL_BLEND);
 		glEnable(GL_CLIP_DISTANCE0);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		processInput(window.window);
 		glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		view = cam.getView();
+		view = camera.getView();
 
-		// std::cout << "sc: "<< scale << std::endl;
-		// std::cout << "dt: "<< densityThreshold << std::endl;
-		// std::cout << "wc: "<< weatherScale << std::endl;
-		// std::cout << "hc: "<< higherScale << std::endl;
 
-		lightPos = glm::rotate(
-			glm::mat4(1.0f), 
-			glm::radians(0.1f), 
-			glm::vec3(0.0f, 1.0f, 0.0f)) * glm::vec4(lightPos, 0.0f);
-
-		glm::vec3 sunD = glm::normalize(glm::vec3(
-			//std::cos(glfwGetTime()), 
-			0.0f,
-			1.0f,
-			// std::sin(glfwGetTime())
-			-2.0f
-		));
 
 		// fbo.Bind();
 
@@ -254,43 +222,36 @@ int main() {
 		glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
 		#endif
 
-		shader4.use();
-		shader4.setMatrix("proj", proj);
-		shader4.setFloat("maxHeight", REngine::MAX_TERRAIN_HEIGHT);
-		shader4.setVec3("sunDirection", sunD);
-		// shader4.setMatrix("view", cam.getView());
-		float offSet = 2*(cam.position.y - waterHeight);
-		cam.position = glm::vec3(cam.position.x, 
-								 cam.position.y - offSet,
-								 cam.position.z);//cam.position.y -= offSet;
-		cam.pitch = -cam.pitch;
-		cam.updateDirection();
-		shader4.setMatrix("view", cam.getView());
-		shader4.setVec4("planeNorm", glm::vec4(0.0f, 1.0f, 0.0f, -waterHeight));
 
+		#ifdef DRAW_WATER
+		// shader4.setMatrix("view", camera.getView());
+		float offSet = 2*(camera.position.y - waterHeight);
+		camera.position = glm::vec3(camera.position.x, 
+								 camera.position.y - offSet,
+								 camera.position.z);//camera.position.y -= offSet;
+		camera.pitch = -camera.pitch;
+		camera.updateDirection();
+		shader4.setMatrix("view", camera.getView());
+		shader4.setVec4("planeNorm", glm::vec4(0.0f, 1.0f, 0.0f, -waterHeight));
 		fb.Bind();
 		terr.draw(shader4);
 		fb.unBind();
 
-		cam.position = glm::vec3(cam.position.x, 
-								 cam.position.y + offSet,
-								 cam.position.z);
-		cam.pitch = -cam.pitch;
-		cam.updateDirection();
-		shader4.setMatrix("view", cam.getView());
+		camera.position = glm::vec3(camera.position.x, 
+								 camera.position.y + offSet,
+								 camera.position.z);
+		camera.pitch = -camera.pitch;
+		camera.updateDirection();
+		shader4.setMatrix("view", camera.getView());
 		shader4.setVec4("planeNorm", glm::vec4(0.0f,-1.0f, 0.0f, waterHeight));
 		fb2.Bind();
 		terr.draw(shader4);
 		fb2.unBind();
 
-		fbo.Bind();
-		#if DRAW_NORMALS
-			shader5.use();
-			shader5.setMatrix("proj", proj);
-			shader5.setFloat("maxHeight", REngine::MAX_TERRAIN_HEIGHT);
-			shader5.setMatrix("view", cam.getView());
-			terr.draw(shader5);
 		#endif
+
+		fbo.Bind();
+		
 
 
 		#if LINE_MODE
@@ -302,10 +263,11 @@ int main() {
 
 		glEnable(GL_DEPTH_TEST);
 		glDisable(GL_CLIP_DISTANCE0);
+		#ifdef DRAW_WATER
 		waterShader.use();
 		waterShader.setMatrix("proj", proj);
-		waterShader.setMatrix("view", cam.getView());
-		glm::mat4 m =glm::translate(glm::mat4(1.0f), glm::vec3(cam.position.x, waterHeight, cam.position.z));
+		waterShader.setMatrix("view", camera.getView());
+		glm::mat4 m =glm::translate(glm::mat4(1.0f), glm::vec3(camera.position.x, waterHeight, camera.position.z));
 		glm::mat4 m2 = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 		glm::mat4 m3 =glm::scale(glm::mat4(1.0f), glm::vec3((50.0f*20.0f)/2.0f));
 		waterShader.setMatrix("model", m*m2*m3);
@@ -315,7 +277,7 @@ int main() {
 		waterShader.setInt("t2", 1);
 		waterShader.setInt("dudv", 2);
 		waterShader.setFloat("moveFac", moveFac);
-		waterShader.setVec3("camPos", cam.position);
+		waterShader.setVec3("cameraPos", camera.position);
 		waterShader.setVec3("planeNorm", glm::vec3(0.0f, 1.0f, 0.0f));
 
 		glActiveTexture(GL_TEXTURE0);
@@ -330,101 +292,21 @@ int main() {
 		glBindVertexArray(plane.VAO);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 		glBindVertexArray(0);
+		#endif
 
-		shader4.use();
-		shader4.setMatrix("proj", proj);
-		shader4.setMatrix("view", cam.getView());
-		terr.draw(shader4);
-		// myAirPlane.updateCameraFeatures();
-		airPlaneShader.use();
-		airPlaneShader.setMatrix("proj", proj);
-		airPlaneShader.setVec3("sunDirection", sunD);
-		// planeModel = glm::mat4(1.0f);
-		// planeModel = glm::scale(planeModel, glm::vec3(5.0f));
-		// planeModel = glm::rotate(planeModel, glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-		// planeModel = glm::rotate(planeModel, glm::radians(planeRoll), glm::vec3(1.0f, 0.0f, 0.0f));
-		// // airPlaneShader.setMatrix("model", planeModel);
-		// airPlaneShader.setMatrix("model", glm::translate(
-		// 									glm::rotate(glm::scale(glm::mat4(1.0f), glm::vec3(5.0f)), glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0) ), 
-		// 									glm::vec3(0.0f, 25.0f, 0.0f)
-		// 					) ) ;
-		// airPlaneShader.setMatrix("view", glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0, -80.0f)) ) ;
-		airPlaneShader.setMatrix("view", cam.getView());
 
-		// airPlane.draw(airPlaneShader);
-		myAirPlane.draw(airPlaneShader);
+		terrainSystem.draw();
 
 		fbo.unBind();
-		computeShdr.use();
-		computeShdr.setMatrix(
-			"invViewMat",
-			glm::inverse(view)
-		);
-		computeShdr.setVec3("camPos", cam.position);
-		computeShdr.setVec3("bounding_rect.pos", glm::vec3(cam.position.x, cloudHeight, cam.position.z));
-		computeShdr.setVec3("offSet", glm::vec3(
-			cam.position.x, 
-			0.0f,
-			cam.position.z + (float)glfwGetTime()*REngine::WIND_SPEED
-		));
 
-
-		// std::cout << "DENSITY THRESHOLD: " << densityThreshold << std::endl;
-		// std::cout << "SIGMA: " 			   << SIGMA << std::endl;
-		// std::cout << "HG: " 			   << HG << std::endl;
-		
-		glDisable(GL_BLEND);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, compT);
-        computeShdr.setInt("texture_diffuse1", 1);
-        computeShdr.setInt("depthTexture", 2);
-		computeShdr.setInt("texture_clouds", 3);
-		computeShdr.setInt("weather_data", 4);
-		computeShdr.setInt("detailTexture", 5);
-		computeShdr.setFloat("densityThreshold", densityThreshold);
-		computeShdr.setFloat("scale", scale);
-		computeShdr.setFloat("weatherScale", weatherScale);
-		computeShdr.setFloat("higherScale", higherScale);
-		computeShdr.setFloat("SIGMA", SIGMA);
-		computeShdr.setFloat("HG", HG);
-		computeShdr.setVec3("sunDirection", sunD);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, fbo.textureId);
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, fbo.depthTextureId);
-		glActiveTexture(GL_TEXTURE3);
-		// glBindTexture(GL_TEXTURE_3D, ntId);
-		glBindTexture(GL_TEXTURE_3D, highTexture);
-		glActiveTexture(GL_TEXTURE4);
-		glBindTexture(GL_TEXTURE_2D, weatherTextureId);
-		// glBindTexture(GL_TEXTURE_2D, weatherDataTexure);
-		glActiveTexture(GL_TEXTURE5);
-		glBindTexture(GL_TEXTURE_3D, detailTextureId);
-		glDispatchCompute((unsigned int)std::ceil(800.0/16.0), 
-						  (unsigned int)std::ceil(600.0/16.0),
-						  1);
-		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-
-		// fbo.draw(quadShdr);
-
-		screenShdr.use();
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, compT);
-		glBindVertexArray(plane.VAO);
-		glDrawArrays(GL_TRIANGLES, 0, 6);
-		// plane.draw(quadShdr, 0);
+		CloudSystem.update(fbo);
+		CloudSystem.draw(screenShdr);
 
 		if (showCfg){
 			ImGui::Begin("Config", &showCfg);
 			ImGui::Text(("FPS: " + std::to_string(fps)).c_str());
 			myAirPlane.addConfigParamsToImgui();
-			ImGui::SliderFloat("Density Threshold", &densityThreshold, 0.0f, 1.0f);
-			ImGui::SliderFloat("Scale", &scale, 0.0f, 2.0f);
-			ImGui::SliderFloat("HG", &HG, 0.0f, 1.0f);
-			ImGui::SliderFloat("SIGMA", &SIGMA, 0.0f, 2.0f);
-			ImGui::SliderFloat("Higher Scale", &higherScale, 0.0f, 20.0f);
-			ImGui::SliderFloat("Weather Scale", &weatherScale, 0.0f, 0.005f);
-			ImGui::SliderFloat("Cloud Height", &cloudHeight, 20.0f, 200.0f);
+			CloudSystem.addConfigParamsToImgui();
 			ImGui::End();
 
 		}
@@ -464,31 +346,11 @@ void processInput(GLFWwindow* window)
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
 
-	// if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-	// 	cam.move(Camera::UP, dt*10.0f);
-
-	// if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-	// 	cam.move(Camera::DOWN, dt*10.0f);
-
-	// if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-	// 	cam.move(Camera::RIGHT, dt*10.0f);
-
-	// if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-	// 	cam.move(Camera::LEFT, dt*10.0f);
-
 	if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
 		densityThreshold += 0.001f;
 	
 	if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS)
 		densityThreshold -= 0.001f;
-
-	// if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS)
-	// 	// scale += 0.001f;;
-	// 	planeRoll -= 0.1f;
-	
-	// if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS)
-	// 	// scale -= 0.001f;
-	// 	planeRoll += 0.1f;
 
 
 	if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS)
@@ -511,37 +373,14 @@ void processInput(GLFWwindow* window)
 	if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS)
 		SIGMA -= 0.001f;
 
-	if (glfwGetKey(window, GLFW_KEY_F1) == GLFW_PRESS)
+	if (glfwGetKey(window, GLFW_KEY_F1) == GLFW_PRESS && 
+		glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
 		showCfg = !showCfg;
 
-	// if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-	// 	cam.incYaw(-cam.sensitivity*3.0f);
-	// 	// cam.yaw -= cam.sensitivity*3.0f;
-	// 	// cam.updateDirection();
-	// }
-
-	// if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-	// 	cam.incYaw(cam.sensitivity*3.0f);
-	// 	// cam.yaw += cam.sensitivity*3.0f;
-	// 	// cam.updateDirection();
-	// }
-
-	// if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-	// 	// cam.pitch += cam.sensitivity*3.0f;
-	// 	cam.incPitch(cam.sensitivity*3.0f);
-	// 	// cam.updateDirection();
-	// }
-
-
-	// if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-	// 	cam.incPitch(-cam.sensitivity*3.0f);
-	// 	//cam.pitch -= cam.sensitivity*3.0f;
-	// 	// cam.updateDirection();
-	// }
 }
 
 
 void mouse_callback(GLFWwindow* window, double xPos, double yPos) {
-	// cam.handleMouse(xPos, yPos);
+	// camera.handleMouse(xPos, yPos);
 }
 

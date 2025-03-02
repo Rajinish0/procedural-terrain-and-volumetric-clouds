@@ -2,6 +2,8 @@
 #define RENGINE_CONSTS_H
 
 namespace REngine{
+    constexpr unsigned int WIDTH       = 800U;
+    constexpr unsigned int HEIGHT      = 600U;
     constexpr float MAX_TERRAIN_HEIGHT = 128.0f;
     constexpr float DENSITY_THRESHOLD  = .434003f;
     constexpr float SCALE 		       = .595005f;
@@ -17,6 +19,8 @@ namespace REngine{
     constexpr float PITCH_SPEED        = 20.0f;
     constexpr float INDUCED_YAW_FACTOR = 0.035f;
     constexpr float STABILIZING_ROLL   = 0.25f;
+    constexpr float FAR_VIEW           = 500.0f;
+    constexpr float NEAR_VIEW          = 0.1f;
 };
 
 #endif

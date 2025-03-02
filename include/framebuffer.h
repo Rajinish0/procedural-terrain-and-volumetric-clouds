@@ -1,3 +1,6 @@
+#ifndef FRAME_BUFFER_H
+#define FRAME_BUFFER_H
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
@@ -78,3 +81,5 @@ public:
 
 
 };
+
+#endif
