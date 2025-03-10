@@ -20,6 +20,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include "framebuffer.h"
+#include "audio_manager.h"
+
 #include "compute_shader.h"
 #include "engine_consts.h"
 #include "textrender.h"
@@ -32,7 +34,7 @@
 #include "imgui_impl_opengl3.h"
 
 #include "dynamic_system.h"
-
+#include "error_utils.h"
 
 
 
@@ -104,6 +106,7 @@ int main() {
 	Shader shader5{"shaders/normal_viz_v.glsl", "shaders/normal_viz_f.glsl", "shaders/normal_viz.glsl"};
 	Shader waterShader{"shaders/w_v.glsl", "shaders/w_f.glsl"};
 	Shader airPlaneShader{"shaders/model-vshader.glsl", "shaders/model-fshader.glsl"};
+	Shader textShader{"shaders/textVshader.glsl", "shaders/textFshader.glsl"};
 	Texture dudv{"textures/dudv.png", Texture::DIFFUSE, GL_REPEAT, GL_REPEAT};
 
 	glm::vec3 sunD = glm::normalize(glm::vec3(
@@ -115,7 +118,7 @@ int main() {
 	glEnable(GL_DEPTH_TEST);
 
 	FrameBuffer fbo, fb, fb2;
-	TextRenderer textRenderer;
+	TextRenderer textRenderer("fonts/ocraext.ttf");
 
 
 	glViewport(0, 0, 800, 600);
@@ -132,6 +135,10 @@ int main() {
 	const float near = 0.1f;
 	const float far  = 500.0f;
 	proj = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, near, far);
+
+	
+    glm::mat4 orthoProj = glm::ortho(0.0f, static_cast<float>(800.0f), 
+									 static_cast<float>(600.0f), 0.0f, -1.0f, 1.0f);
 	glm::mat4 planeModel = glm::rotate(
 		glm::mat4(1.0f), 
 		glm::radians(90.0f),
@@ -154,7 +161,13 @@ int main() {
 	shader5.setMatrix("proj", proj);
 
 	computeShdr.use();
-	computeShdr.setMatrix("invProjMat", glm::inverse(proj));
+	computeShdr.setMatrix("invProjMat", invProj);
+
+	waterShader.use();
+	waterShader.setMatrix("proj", proj);
+
+	textShader.use();
+	textShader.setMatrix("proj", orthoProj);
 	glm::vec3 lightPos(3.0f, 2.0f, 0.0f);
 
 	fbo.setClearColor(glm::vec4(0.529,0.708,0.922, 1.0f));
@@ -165,13 +178,25 @@ int main() {
 
 	float waterHeight = 5.0f;
 	Plane plane;
-	Airplane myAirPlane {"models/plane/a22.obj"};
+	std::shared_ptr<AudioManager> audioMgr = std::make_shared<AudioManager>();
+	Airplane myAirPlane {"models/plane/a22.obj", 
+						 "models/air_drop/air_drop.obj",
+						 "audio/aircraft.wav",
+						 "audio/parachute.wav",
+						 audioMgr
+						};
+
 
 	myAirPlane.setPos(glm::vec3(0.0f, 40.0f, 0.0f));
 	myAirPlane.mount(&camera);
 	myAirPlane.attach(&window);
 
-	DynamicSystem terrainSystem(camera, shader4, shader5, airPlaneShader, myAirPlane, REngine::MAX_TERRAIN_HEIGHT, sunD);
+	DynamicSystem terrainSystem(
+		camera, shader4, shader5, 
+		airPlaneShader, waterShader, 
+		myAirPlane, 
+		REngine::MAX_TERRAIN_HEIGHT, waterHeight,
+		 sunD);
 	CloudSystem CloudSystem(
 		"f_data_HIGH.raw",
 		"low_res.raw",
@@ -194,6 +219,7 @@ int main() {
 	ImGui_ImplOpenGL3_Init("#version 150");
 
 	ImVec4 clearColor = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+	glm::vec3 textColor = {0.23921f, 0.415686f, 0.44705f};
 	while (!window.shouldClose())
 	{
 
@@ -215,7 +241,6 @@ int main() {
 		view = camera.getView();
 
 
-
 		// fbo.Bind();
 
 		#if LINE_MODE
@@ -234,7 +259,7 @@ int main() {
 		shader4.setMatrix("view", camera.getView());
 		shader4.setVec4("planeNorm", glm::vec4(0.0f, 1.0f, 0.0f, -waterHeight));
 		fb.Bind();
-		terr.draw(shader4);
+		terrainSystem.terrain.draw(shader4);
 		fb.unBind();
 
 		camera.position = glm::vec3(camera.position.x, 
@@ -245,12 +270,12 @@ int main() {
 		shader4.setMatrix("view", camera.getView());
 		shader4.setVec4("planeNorm", glm::vec4(0.0f,-1.0f, 0.0f, waterHeight));
 		fb2.Bind();
-		terr.draw(shader4);
+		terrainSystem.terrain.draw(shader4);
 		fb2.unBind();
 
 		#endif
 
-		fbo.Bind();
+		// fbo.Bind();
 		
 
 
@@ -258,11 +283,11 @@ int main() {
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		#endif
 
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		// glEnable(GL_BLEND);
+		// glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-		glEnable(GL_DEPTH_TEST);
-		glDisable(GL_CLIP_DISTANCE0);
+		// glEnable(GL_DEPTH_TEST);
+		// glDisable(GL_CLIP_DISTANCE0);
 		#ifdef DRAW_WATER
 		waterShader.use();
 		waterShader.setMatrix("proj", proj);
@@ -295,20 +320,37 @@ int main() {
 		#endif
 
 
-		terrainSystem.draw();
+		terrainSystem.draw(fbo);
 
-		fbo.unBind();
+		// fbo.unBind();
 
 		CloudSystem.update(fbo);
 		CloudSystem.draw(screenShdr);
+
+		audioMgr->update();
+		
+		glDisable(GL_DEPTH_TEST);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glm::vec3 p = myAirPlane.getPos();
+		std::ostringstream T;
+		T.precision(4);
+		T << '(' << p.x << ',' << p.z
+		 << ')';
+		textRenderer.renderText(textShader, 
+			T.str()
+			, 0.0f, 0.0f,
+		1.0f, textColor, 
+		TextRenderer::TOP_LEFT
+		);
 
 		if (showCfg){
 			ImGui::Begin("Config", &showCfg);
 			ImGui::Text(("FPS: " + std::to_string(fps)).c_str());
 			myAirPlane.addConfigParamsToImgui();
 			CloudSystem.addConfigParamsToImgui();
+			ImGui::ColorEdit3("Text Color", &textColor.r);
 			ImGui::End();
-
 		}
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

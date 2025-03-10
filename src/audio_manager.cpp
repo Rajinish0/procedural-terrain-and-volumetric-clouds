@@ -48,8 +48,8 @@ void AudioManager::play2D(std::string filename, bool loop){
         return;
     }
 
-    std::cout << "FRAMES: " << sfinfo.frames << std::endl;
-    std::cout << "samplerat: " << sfinfo.samplerate << std::endl;
+    // std::cout << "FRAMES: " << sfinfo.frames << std::endl;
+    // std::cout << "samplerat: " << sfinfo.samplerate << std::endl;
     /*
     i could get the duration like this and delete it after that much time has passed
     sfinfo.frame / sfinfo.samplerate
@@ -67,6 +67,7 @@ void AudioManager::play2D(std::string filename, bool loop){
     ALuint *source = new ALuint;
     alGenSources(1, source);
     alSourcei(*source, AL_BUFFER, *buffer);
+    alSourcei(*source, AL_LOOPING, loop ? AL_TRUE : AL_FALSE);
 
     currentPlaying.push_back( _buf_source_loop(buffer, source, loop) );
 
@@ -92,7 +93,7 @@ void AudioManager::update(){
             continue;
         }
         else if (state == AL_STOPPED && std::get<2>(*it)){
-            alSourcePlay(*source);
+            // alSourcePlay(*source);
         }
         ++it;
     }
@@ -121,3 +122,4 @@ AudioManager::~AudioManager(){
     alcDestroyContext(context);
     alcCloseDevice(device);
 }
+

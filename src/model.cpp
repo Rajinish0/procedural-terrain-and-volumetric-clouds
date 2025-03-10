@@ -21,7 +21,7 @@ void Model::loadModel(std::string path) {
 	directory = path.substr(0, path.find_last_of('/'));
 	processNode(scene->mRootNode, scene);
 
-	std::cout << "LOADED MESHES: " << meshes.size() << std::endl;
+	// std::cout << "LOADED MESHES: " << meshes.size() << std::endl;
 
 }
 
@@ -83,15 +83,15 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene) {
 
 	if (mesh->mMaterialIndex >= 0) {
 		aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-		std::cout << "LOADING DIFFUSE ONES " << std::endl;
+		// std::cout << "LOADING DIFFUSE ONES " << std::endl;
 		std::vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, Texture::DIFFUSE);
 		textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
 
-		std::cout << "LOADING SPECULAR ONES " << std::endl;
+		// std::cout << "LOADING SPECULAR ONES " << std::endl;
 		std::vector<Texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, Texture::SPECULAR);
 		textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
 		if(AI_SUCCESS == material->Get(AI_MATKEY_OPACITY, meshMaterial.opacity)) {
-			std::cout << "GOT THE OPACITY: " << meshMaterial.opacity << std::endl;
+			// std::cout << "GOT THE OPACITY: " << meshMaterial.opacity << std::endl;
 		}
 	}
 
@@ -131,7 +131,7 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial* material, aiTexture
 		// }
 		if (!cached) {
 			Texture texture;
-			std::cout << "LOADING TEXTURE: " << str.C_Str() << std::endl;
+			// std::cout << "LOADING TEXTURE: " << str.C_Str() << std::endl;
 			texture.id = funcs::TextureFromFile(str.C_Str(), directory);
 			texture.type = typeName;
 			texture.path = str.C_Str();

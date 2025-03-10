@@ -1,0 +1,24 @@
+# Blender 4.3.2 MTL File: 'air_drop.blen'
+# www.blender.org
+
+newmtl PickUp_Airdrop_A_D
+Ns 29.256536
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd PickUp_Airdrop_A_D.png
+
+newmtl PickUp_CarePackage_B_D
+Ns 33.098526
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd PickUp_CarePackage_B_D.png

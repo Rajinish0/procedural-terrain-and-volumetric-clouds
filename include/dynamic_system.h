@@ -12,8 +12,9 @@
 class DynamicSystem{
 public:
     DynamicSystem(Camera& camera, Shader& shader, Shader& normalShader, 
-                  Shader& airplaneShader,
-                  Airplane& airplane, float maxHeight, glm::vec3 sunDirection);
+                  Shader& airplaneShader, Shader& waterShader,
+                  Airplane& airplane, float maxHeight, float waterHeight,
+                  glm::vec3 sunDirection);
 
     // #ifdef DRAW_WATER
     // DynamicSystem(Camera& camera, Shader& shader, Shader& airplaneShader, Shader& waterShader,
@@ -23,21 +24,22 @@ public:
 
     void update(float dt);
 
-    void draw();
+    void draw(FrameBuffer& fbo);
 
 public:
     Camera& camera;
     Shader& shader;
     Shader& normalShader;
     Shader& airplaneShader;
+    Shader& waterShader;
     Airplane& airplane;
     EndlessTerrain terrain;
-    // #ifdef DRAW_WATER
-    // FrameBuffer fb, fb2;
-    // Shader& waterShader;
-    // float waterHeight;
-    // Plane plane;
-    // #endif
+    float waterHeight;
+    FrameBuffer fb, fb2;
+    Texture dudv;
+    Plane plane;
+    float moveFac;
+    float moveVel = 0.015f;
 };
 
 #endif

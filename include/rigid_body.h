@@ -7,13 +7,18 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
 #include "camera.h"
+#include "debug.h"
 
 class RigidBody{
 public:
-    RigidBody (float mass, glm::vec3 pos, glm::quat orient, glm::mat4 inertiaTensor)
-        :mass(mass), pos(pos), orient(orient), linearVel(0.0f), angularVel(0.0f), 
-         inverseInertiaTensor(glm::inverse(inertiaTensor)), totalForce(0.0f), totalTorque(0.0f){
-
+    RigidBody (float mass, glm::vec3 pos, glm::quat orient, glm::mat4 inertiaTensor, 
+               glm::vec3 linearVel = {0.0f, 0.0f, 0.0f}, glm::vec3 angularVel = {0.0f, 0.0f, 0.0f},
+               float linearDamp = 0.99f, float angularDamp = 0.75f)
+        :mass(mass), pos(pos), orient(orient), linearVel(linearVel), angularVel(angularVel), 
+         inverseInertiaTensor(glm::inverse(inertiaTensor)), totalForce(0.0f), totalTorque(0.0f),
+         linearDamp(linearDamp), angularDamp(angularDamp)
+         {
+        
          }
     
     void update(float dt){
@@ -28,8 +33,8 @@ public:
         orient += 0.5f * glm::quat(0.0f, angularVel * dt) * orient;
         orient = glm::normalize(orient);
 
-        angularVel *= 0.75f;
-        linearVel *= 0.99f;
+        angularVel *= angularDamp;
+        linearVel *= linearDamp;
 
         resetExternalForces();
     }
@@ -58,7 +63,7 @@ public:
         totalTorque += torque;
     }
 
-    glm::vec3 getPos(){
+    glm::vec3 getPos() const{
         return pos;
     }
 
@@ -66,7 +71,7 @@ public:
         this->pos = pos;
     }
 
-    glm::vec3 getDirection(){
+    glm::vec3 getDirection() const{
         return orient * glm::vec3(0.0f, 0.0f, -1.0f);
     }
 
@@ -83,6 +88,8 @@ protected:
     glm::mat3 inverseInertiaTensor;
     glm::vec3 totalForce;
     glm::vec3 totalTorque;
+    float linearDamp, 
+          angularDamp;
     Camera *camera = nullptr;
 
 

@@ -11,6 +11,9 @@
 #include "camera.h"
 #include "window.h"
 #include "engine_consts.h"
+#include "packet.h"
+#include "audio_manager.h"
+#include <memory>
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -18,7 +21,10 @@
 
 class Airplane : public Model, public RigidBody {
 public:
-    Airplane(const std::string& path);
+    Airplane(const std::string& path, const std::string& airDropPath,
+             const std::string& aircraftSound, const std::string& packetSound,
+             std::shared_ptr<AudioManager> audioManager
+            );
 
     void update(float dt);
 
@@ -42,6 +48,14 @@ public:
 private:
     Camera *camera = nullptr;
     Window *window = nullptr;
+    std::shared_ptr<Model> airDropModel;
+    std::shared_ptr<AudioManager> audioMgr;
+
+    std::vector<Packet> packets;
+    bool dropPackage;
+    float coolDown = -0.1f;
+    std::string packetSound;
+    
     float throttle =0.0f,
           pitch    =0.0f, 
           roll     =0.0f, 
