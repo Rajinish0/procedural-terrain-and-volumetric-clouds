@@ -11,7 +11,7 @@ SOURCES := $(wildcard $(SRCDIR)/*.cpp)
 SOURCES += $(SRCDIR)/glad.c
 OBJECTS := $(patsubst $(SRCDIR)/%.cpp,$(BUILDDIR)/%.o,$(SOURCES))
 
-INCLUDES := -I$(INCDIR) -I$(INCDIR)/freetype2
+INCLUDES := -I$(INCDIR) -I$(INCDIR)/freetype2 -I$(INCDIR)/external
 
 all: $(EXECUTABLE)
 
