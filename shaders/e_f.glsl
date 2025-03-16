@@ -21,7 +21,7 @@ vec3 applyFog(vec3 originalColor, float distance) {
     // vec3 fogColor = skycolor; // The color of the fog
     // return mix(originalColor, fogColor, 1.0 - fogFactor);
 
-    float fogAmt = 1.0 - exp(-distance*.005);
+    float fogAmt = 1.0 - exp(-distance*.007);
     vec3 fogColor = vec3(0.529,0.708,0.922);//vec3(0.5, 0.6, 0.7);
     return mix(originalColor, fogColor, fogAmt);
 }

@@ -4,11 +4,22 @@
 #include <string>
 #include "mesh.h"
 #include "perlin.h"
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 namespace funcs {
 	unsigned int TextureFromFile(const std::string& path, std::string directory, 
 								 GLuint S_WRAP = GL_REPEAT, 
 								 GLuint T_WRAP = GL_REPEAT);
+
+
+	unsigned int TextureFromFile(const std::string& path, GLuint S_WRAP = GL_REPEAT, 
+								GLuint T_WRAP = GL_REPEAT);
+
+
 	unsigned int loadCubeMap(std::vector<std::string> faces);
 	Mesh genSphere();
 	Mesh genTorus(); // or donut?
@@ -79,6 +90,14 @@ namespace funcs {
 	GLuint loadDetailTexture(std::string fname);
 	GLuint loadGeneric3dTexture(std::string fname);
 	GLuint loadGeneric2dTexture(std::string fname);
+	glm::vec2 genRandomCoords2d(float min = -5000.0f, 
+						 	  	float max =  5000.0f);
+
+	template<typename T>
+	T remap(T val, T lower, T upper, T newLower, T newUpper){
+		return newLower + (newUpper - newLower)*(val - lower)/(upper-lower);
+	}
+
 }
 
 #endif

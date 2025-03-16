@@ -1,48 +1,54 @@
 #include "stb_image.h"
 #include "funcs.h" 
 
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
+#include <random>
 
 
 
 namespace funcs{
+
+	std::random_device rd;
+	std::mt19937 gen(rd());
+
+
 	unsigned int TextureFromFile(const std::string & path, std::string directory, 
-								 GLuint S_WRAP, GLuint T_WRAP) {
-		int width, height, nChannels;
-		// std::cout << directory << " " << path << std::endl;
-		unsigned char* data = stbi_load((directory + "/" + path).c_str(), &width, &height, &nChannels, 0);
-		// std::cout << (directory + "/" + path).c_str() << std::endl;
-		unsigned int id = 1;
-		// std::cout << id << " : " << &id << std::endl;
-		glGenTextures(1, &id);
-
-		// std::cout << "HERE NOW " << std::endl;
-
-		if (data) {
-			GLenum format;
-			if (nChannels == 1)
-				format = GL_RED;
-			else if (nChannels == 3)
-				format = GL_RGB;
-			else if (nChannels == 4)
-				format = GL_RGBA;
-
-			glBindTexture(GL_TEXTURE_2D, id);
-			glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, S_WRAP);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, T_WRAP);
-			glGenerateMipmap(GL_TEXTURE_2D);
-
-			stbi_image_free(data);
-		}
-		else
-			std::cerr << "Couldn't load texture: " << directory << '/' << path << std::endl;
-		return id;
+								 GLuint S_WRAP, GLuint T_WRAP) 
+	{
+		return TextureFromFile(
+			directory + "/" + path,
+			S_WRAP, T_WRAP
+		);
 	}
+
+	unsigned int TextureFromFile(const std::string& path, GLuint S_WRAP, GLuint T_WRAP){
+			int width, height, nChannels;
+			unsigned char* data = stbi_load(path.c_str(), &width, &height, &nChannels, 0);
+			unsigned int id = 0;
+			glGenTextures(1, &id);
+
+	
+			if (data) {
+				GLenum format;
+				if (nChannels == 1)
+					format = GL_RED;
+				else if (nChannels == 3)
+					format = GL_RGB;
+				else if (nChannels == 4)
+					format = GL_RGBA;
+	
+				glBindTexture(GL_TEXTURE_2D, id);
+				glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, S_WRAP);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, T_WRAP);
+				glGenerateMipmap(GL_TEXTURE_2D);
+	
+				stbi_image_free(data);
+			}
+			else
+				std::cerr << "Couldn't load texture: " << path << std::endl;
+			return id;
+		}
+
 
 	unsigned int loadCubeMap(std::vector<std::string> faces) {
 		/*
@@ -635,4 +641,11 @@ namespace funcs{
 		return tId;
 
 	}
+
+	glm::vec2 genRandomCoords2d(float min, float max){
+		std::uniform_real_distribution<float> dis(min, max);
+
+		return {dis(gen), dis(gen)};
+	}
+
 }

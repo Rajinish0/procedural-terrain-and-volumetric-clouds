@@ -103,3 +103,7 @@ void Shader::use() {
 	glUseProgram(shaderProg);
 }
 
+Shader::~Shader(){
+	glDeleteProgram(shaderProg);
+}
+

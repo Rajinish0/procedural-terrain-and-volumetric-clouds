@@ -9,7 +9,7 @@ _chunkData generateChunkData(int size, glm::vec2 center = glm::vec2(0.0f)){
 	float tlY = (size - 1)/2.0f;
 	float x, y;
 	float scale = (SCALE/chunkSize)/200.0f;
-    Perlin2d perlin(256, 6);
+    Perlin2d perlin(256, 8);
 	for (int i =-1; i < size + 1; ++i){
 		for (int j =-1; j < size + 1; ++j){
             // if (j == size)

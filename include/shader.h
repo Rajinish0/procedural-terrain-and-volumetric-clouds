@@ -37,6 +37,7 @@ public :
 	
 	static std::string loadSource(std::string source);
 	static unsigned int compileShader(GLenum type, std::string& sourceCode);
+	~Shader();
 private:
 	// utility function for checking shader compilation/linking errors.
 	// ------------------------------------------------------------------------

@@ -10,8 +10,14 @@ float qvertices[]{
 };
 
 
+unsigned int Plane::VAO =0, 
+             Plane::VBO =0;
+bool         Plane::initialized 
+             = false;
+
 Plane::Plane()
 {
+    if (Plane::initialized) return;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
 
@@ -34,17 +40,18 @@ Plane::Plane()
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
+    Plane::initialized = true;
 }
 
-void Plane::draw(Shader& shader, unsigned int textureId, unsigned int depthTextureId){
+void Plane::draw(Shader& shader, unsigned int textureId){
     shader.use();
     glBindVertexArray(VAO);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, textureId);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, depthTextureId);
+    // glActiveTexture(GL_TEXTURE1);
+    // glBindTexture(GL_TEXTURE_2D, depthTextureId);
     shader.setInt("texture_diffuse1", 0);
-    shader.setInt("depthTexture", 1);
+    // shader.setInt("depthTexture", 1);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
 }

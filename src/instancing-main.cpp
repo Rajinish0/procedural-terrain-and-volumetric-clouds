@@ -36,6 +36,8 @@
 #include "dynamic_system.h"
 #include "error_utils.h"
 
+#include "game.h"
+
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -64,6 +66,16 @@ T randNum(T min, T max){
 	T dist = (max - min);
 	float random_number = static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX);
 	return (min + dist*random_number);
+}
+
+inline std::ostream& operator<<(std::ostream& os, const glm::vec2& v){
+	os << '(' << v.x << ', ' << v.y << ')';
+	return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const glm::vec3& v){
+	os << '(' << v.x << ', ' << v.y << ', ' << v.z << ')';
+	return os;
 }
 
 
@@ -191,6 +203,7 @@ int main() {
 	myAirPlane.mount(&camera);
 	myAirPlane.attach(&window);
 
+
 	DynamicSystem terrainSystem(
 		camera, shader4, shader5, 
 		airPlaneShader, waterShader, 
@@ -208,6 +221,13 @@ int main() {
 		sunD, fbo
 	);
 
+	std::shared_ptr<game::GameParameters> gameParams =
+	std::make_shared<game::GameParameters>(
+			textRenderer,
+			myAirPlane
+	);
+
+	game::Game myGame(gameParams);
 
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
@@ -220,6 +240,7 @@ int main() {
 
 	ImVec4 clearColor = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 	glm::vec3 textColor = {0.23921f, 0.415686f, 0.44705f};
+	glm::vec2 randCoords = funcs::genRandomCoords2d();
 	while (!window.shouldClose())
 	{
 
@@ -326,30 +347,20 @@ int main() {
 
 		CloudSystem.update(fbo);
 		CloudSystem.draw(screenShdr);
+		
+		myGame.update(dt);
+		myGame.draw(textShader);
 
 		audioMgr->update();
 		
-		glDisable(GL_DEPTH_TEST);
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glm::vec3 p = myAirPlane.getPos();
-		std::ostringstream T;
-		T.precision(4);
-		T << '(' << p.x << ',' << p.z
-		 << ')';
-		textRenderer.renderText(textShader, 
-			T.str()
-			, 0.0f, 0.0f,
-		1.0f, textColor, 
-		TextRenderer::TOP_LEFT
-		);
 
 		if (showCfg){
 			ImGui::Begin("Config", &showCfg);
 			ImGui::Text(("FPS: " + std::to_string(fps)).c_str());
 			myAirPlane.addConfigParamsToImgui();
 			CloudSystem.addConfigParamsToImgui();
-			ImGui::ColorEdit3("Text Color", &textColor.r);
+			myGame.addConfigParamsToImgui();
+			// ImGui::ColorEdit3("Text Color", &textColor.r);
 			ImGui::End();
 		}
 		ImGui::Render();

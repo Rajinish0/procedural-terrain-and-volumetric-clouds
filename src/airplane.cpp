@@ -69,8 +69,10 @@ void Airplane::update(float dt) {
             airDropModel, this->pos + glm::vec3(0.0f, -2.0f, 0.0f),
             this->linearVel
         );
-        coolDown = 3.0f;
+        coolDown = MAX_COOL_DOWN;
         audioMgr->play2D(packetSound);
+
+        onDrop();
         // std::cout << "DROPPING PACKAGE " << std::endl;
     }
 
@@ -78,7 +80,7 @@ void Airplane::update(float dt) {
         pkt.update(dt);
     // audioMgr->update();
     
-    if (coolDown > -0.5f)
+    if (coolDown > MIN_COOL_DOWN)
         coolDown -= dt;
     
     resetParameters();
@@ -153,5 +155,9 @@ void Airplane::resetParameters(){
     pitch    = 0.0f;
     yaw      = 0.0f;
     dropPackage = false;
+}
+
+void Airplane::bindOnDrop(std::function<void()> func){
+    onDrop = func;
 }
 

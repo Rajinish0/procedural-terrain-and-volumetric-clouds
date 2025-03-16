@@ -71,7 +71,10 @@ public:
 
     void draw(Shader& shader) {
         // glDisable(GL_DEPTH_TEST);
-        plane.draw(shader, textureId, depthTextureId);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, depthTextureId);
+        shader.setInt("depthTexture", 1);
+        plane.draw(shader, textureId);
         // glEnable(GL_DEPTH_TEST);
     }
 
