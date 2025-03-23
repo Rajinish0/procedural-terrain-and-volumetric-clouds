@@ -7,6 +7,8 @@
 #include "shader.h"
 
 
+
+
 class Plane{
 
 private:
@@ -21,6 +23,10 @@ public:
     ALL OTHER TEXTURES REQUIRED MUST BE MANUALLY BOUND TO 
     GL_TEXTURE0 + i (where i >= 1) AND MUSH ALSO BE MANUALLY 
     SET BY THE SHADER TO PREDIFNED UNIFORM VARIABLES BEFOREHAND
+
+    TO DO:
+    This is bad design, i need to change it to a singleton class
+    and I just destroy it at the end of the prog
     */
     Plane();
 

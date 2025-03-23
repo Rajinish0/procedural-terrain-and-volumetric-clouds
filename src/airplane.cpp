@@ -13,7 +13,7 @@ Airplane::Airplane(const std::string& path,
         airDropModel = std::make_shared<Model>(airDropPath);
         // audioMgr     = std::make_unique<AudioManager>();
         applyForce(glm::vec3(0.0f, 0.0, -10.0f));
-        audioMgr->play2D(aircraftSound, true);
+        if (audioMgr) audioMgr->play2D(aircraftSound, true);
     }
 
 void Airplane::update(float dt) {
@@ -70,7 +70,7 @@ void Airplane::update(float dt) {
             this->linearVel
         );
         coolDown = MAX_COOL_DOWN;
-        audioMgr->play2D(packetSound);
+        if (audioMgr) audioMgr->play2D(packetSound);
 
         onDrop();
         // std::cout << "DROPPING PACKAGE " << std::endl;
@@ -106,15 +106,49 @@ void Airplane::attach(Window *window){
     this->window = window;
 }
 
-void Airplane::updateCameraFeatures(){
-    glm::vec3 direc = glm::normalize(getDirection());
-    camera->position = this->pos - direc * 10.0f;
-    float yawDeg = glm::degrees(std::atan2(direc.z, direc.x));
-    float pitchDeg = glm::degrees(std::atan2(direc.y, glm::length(glm::vec2(direc.x, direc.z))));
-    camera->setYaw(yawDeg);
-    camera->setPitch(pitchDeg);
+// void Airplane::updateCameraFeatures(){
+//     glm::vec3 direc = glm::normalize(getDirection());
+//     camera->position = this->pos - direc * 10.0f;
+//     float yawDeg = glm::degrees(std::atan2(direc.z, direc.x));
+//     float pitchDeg = glm::degrees(std::atan2(direc.y, glm::length(glm::vec2(direc.x, direc.z))));
+//     camera->setYaw(yawDeg);
+//     camera->setPitch(pitchDeg);
+//     camera->updateDirection();
+// }
+
+void Airplane::updateCameraFeatures() {
+    glm::vec3 targetPosition = this->pos - glm::normalize(getDirection()) * 10.0f;
+
+    float smoothFactor = 0.1f;
+    camera->position = glm::mix(camera->position, targetPosition, smoothFactor);
+
+    glm::vec3 direction = glm::normalize(getDirection());
+    // std::cout << direction.z << ' ' << direction.x << std::endl;
+    float targetYaw = glm::degrees(std::atan2(direction.z, direction.x));
+    /* 
+    conventionally, this is kept same if x > 0
+    but the way i have coded my camera it starts looking at yaw = -90
+    in the negative z direction (because it's easier for me to remember with the negative sign)
+    so if i make this 270 here instead, there would be a bad jump at the start
+    */
+    targetYaw = (targetYaw < 0) ? targetYaw : targetYaw - 360.0f;
+    float targetPitch = glm::degrees(std::atan2(direction.y, glm::length(glm::vec2(direction.x, direction.z))));
+
+    // std::cout << "TARGET YAW: " << targetYaw << std::endl;
+
+    camera->setYaw(targetYaw);
+    camera->setPitch(targetPitch);
+
+    /*TO DO: figure out how to lerp angles 
+             e.g. how would this work?
+             lerp(-358, -1, theta)
+    */
+    // camera->setYaw(glm::mix(camera->yaw, std::fmod(targetYaw-360.0f, 360.0f) , smoothFactor));
+    // camera->setPitch(glm::mix(camera->pitch, targetPitch, smoothFactor));
+
     camera->updateDirection();
 }
+
 
 void Airplane::addConfigParamsToImgui(){
     ImGui::SliderFloat("rollFactor", &rollFactor, 0.0f, 15.0f);

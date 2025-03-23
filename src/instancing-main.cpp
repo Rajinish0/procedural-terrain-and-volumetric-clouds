@@ -28,6 +28,7 @@
 #include "airplane.h"
 #include <ft2build.h> // checking if build was good
 #include "cloud_system.h"
+#include "sprite_renderer.h"
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -119,7 +120,10 @@ int main() {
 	Shader waterShader{"shaders/w_v.glsl", "shaders/w_f.glsl"};
 	Shader airPlaneShader{"shaders/model-vshader.glsl", "shaders/model-fshader.glsl"};
 	Shader textShader{"shaders/textVshader.glsl", "shaders/textFshader.glsl"};
+	Shader spriteShader{"shaders/quad_vertex.glsl", "shaders/quad_frag.glsl"};
 	Texture dudv{"textures/dudv.png", Texture::DIFFUSE, GL_REPEAT, GL_REPEAT};
+
+	SpriteRenderer spriteRenderer{};
 
 	glm::vec3 sunD = glm::normalize(glm::vec3(
 		0.0f,
@@ -131,7 +135,6 @@ int main() {
 
 	FrameBuffer fbo, fb, fb2;
 	TextRenderer textRenderer("fonts/ocraext.ttf");
-
 
 	glViewport(0, 0, 800, 600);
 	glm::mat4 trans(1.0f);
@@ -151,6 +154,9 @@ int main() {
 	
     glm::mat4 orthoProj = glm::ortho(0.0f, static_cast<float>(800.0f), 
 									 static_cast<float>(600.0f), 0.0f, -1.0f, 1.0f);
+
+	glm::vec4 out = orthoProj*glm::vec4(400.0f, 300.0f, 0.0f, 1.0f);
+	printVec4(out);
 	glm::mat4 planeModel = glm::rotate(
 		glm::mat4(1.0f), 
 		glm::radians(90.0f),
@@ -180,7 +186,12 @@ int main() {
 
 	textShader.use();
 	textShader.setMatrix("proj", orthoProj);
+
+	spriteShader.use();
+	spriteShader.setMatrix("proj", orthoProj);
+
 	glm::vec3 lightPos(3.0f, 2.0f, 0.0f);
+
 
 	fbo.setClearColor(glm::vec4(0.529,0.708,0.922, 1.0f));
 	glm::mat4 cubeModel = glm::translate(
@@ -224,7 +235,11 @@ int main() {
 	std::shared_ptr<game::GameParameters> gameParams =
 	std::make_shared<game::GameParameters>(
 			textRenderer,
-			myAirPlane
+			myAirPlane,
+			camera,
+			terrainSystem,
+			CloudSystem,
+			spriteRenderer
 	);
 
 	game::Game myGame(gameParams);
@@ -250,7 +265,7 @@ int main() {
 		ImGui::NewFrame();
 
 
-		terrainSystem.update( 1.0f/60.0f );
+		// terrainSystem.update( 1.0f/60.0f );
 
 
 		glEnable(GL_BLEND);
@@ -341,15 +356,15 @@ int main() {
 		#endif
 
 
-		terrainSystem.draw(fbo);
+		// terrainSystem.draw(fbo);
 
-		// fbo.unBind();
+		// // fbo.unBind();
 
-		CloudSystem.update(fbo);
-		CloudSystem.draw(screenShdr);
+		// CloudSystem.update(fbo);
+		// CloudSystem.draw(screenShdr);
 		
-		myGame.update(dt);
-		myGame.draw(textShader);
+		myGame.update(1.0f/60.0f);
+		myGame.draw(textShader, screenShdr, spriteShader);
 
 		audioMgr->update();
 		

@@ -1,6 +1,11 @@
 #ifndef RENGINE_CONSTS_H
 #define RENGINE_CONSTS_H
 
+
+#define X_AXIS glm::vec3(1.0f, 0.0f, 0.0f)
+#define Y_AXIS glm::vec3(0.0f, 1.0f, 0.0f)
+#define Z_AXIS glm::vec3(0.0f, 0.0f, 1.0f)
+
 namespace REngine{
     constexpr unsigned int WIDTH       = 800U;
     constexpr unsigned int HEIGHT      = 600U;

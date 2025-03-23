@@ -93,9 +93,16 @@ namespace funcs {
 	glm::vec2 genRandomCoords2d(float min = -5000.0f, 
 						 	  	float max =  5000.0f);
 
+
+	template<typename T>
+	T lerp(T lower, T upper, T percent){
+		return lower + (upper - lower) * percent;
+	}
+
 	template<typename T>
 	T remap(T val, T lower, T upper, T newLower, T newUpper){
-		return newLower + (newUpper - newLower)*(val - lower)/(upper-lower);
+		// return newLower + (newUpper - newLower)*(val - lower)/(upper-lower);
+		return lerp(newLower, newUpper, (val-lower)/(upper-lower));
 	}
 
 }

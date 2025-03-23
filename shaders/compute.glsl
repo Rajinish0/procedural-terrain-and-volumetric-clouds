@@ -520,7 +520,7 @@ void main(){
     // Base sky color
     color = vec3(0.529,0.708,0.922);
     // Add vertical gradient
-    color += 0.8 * vec3(0.90,0.75,0.90) * r.dir.y;
+    // color += 0.8 * vec3(0.90,0.75,0.90) * r.dir.y;
     // Add sun color to sky
     color += 0.5 * sunColor * pow(sun, 200.0);
 

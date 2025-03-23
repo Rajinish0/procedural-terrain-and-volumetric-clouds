@@ -157,75 +157,75 @@ void TextRenderer::initializeStuff() {
 void TextRenderer::renderText(Shader& shader, std::string text, 
 	float x, float y, float scale, 
 	glm::vec3 color, Mode mode) {
-shader.use();
-shader.setVec3("textColor", color);
+	shader.use();
+	shader.setVec3("textColor", color);
 
-glActiveTexture(GL_TEXTURE0);
-glBindVertexArray(VAO);
-Character ch;
+	glActiveTexture(GL_TEXTURE0);
+	glBindVertexArray(VAO);
+	Character ch;
 
-float totalWidth = 0.0f;
-float totalHeight = 0.0f;
-for (const char c : text) {
-ch = Characters[c];
-totalWidth += (ch.Advance >> 6) * scale;
-totalHeight = std::max(totalHeight, (float)ch.Size.y);
-}
+	float totalWidth = 0.0f;
+	float totalHeight = 0.0f;
+	for (const char c : text) {
+	ch = Characters[c];
+	totalWidth += (ch.Advance >> 6) * scale;
+	totalHeight = std::max(totalHeight, (float)ch.Size.y);
+	}
 
 
-float xOffset, yOffset;
-switch (mode) {
-case TOP_LEFT:
-xOffset = 0.0f;
-yOffset = 0.0f;
-break;
-case CENTER:
-xOffset = -totalWidth / 2.0f;
-yOffset = -totalHeight / 2.0f;
-break;
-case BOTTOM_LEFT:
-xOffset = 0.0f;
-yOffset = -totalHeight;
-break;
-case TOP_RIGHT:
-xOffset = -totalWidth;
-yOffset = 0.0f;
-break;
-case BOTTOM_RIGHT:
-xOffset = -totalWidth;
-yOffset = -totalHeight;
-break;
-}
+	float xOffset, yOffset;
+	switch (mode) {
+		case TOP_LEFT:
+		xOffset = 0.0f;
+		yOffset = 0.0f;
+		break;
+		case CENTER:
+		xOffset = -totalWidth / 2.0f;
+		yOffset = -totalHeight / 2.0f;
+		break;
+		case BOTTOM_LEFT:
+		xOffset = 0.0f;
+		yOffset = -totalHeight;
+		break;
+		case TOP_RIGHT:
+		xOffset = -totalWidth;
+		yOffset = 0.0f;
+		break;
+		case BOTTOM_RIGHT:
+		xOffset = -totalWidth;
+		yOffset = -totalHeight;
+		break;
+	}
 
-for (const char c : text) {
-ch = Characters[c];
+	for (const char c : text) {
+		ch = Characters[c];
 
-float xpos = (x + xOffset) + ch.Bearing.x * scale;
-float ypos = (y + yOffset) + (this->Characters['H'].Bearing.y - ch.Bearing.y) * scale;
+		float xpos = (x + xOffset) + ch.Bearing.x * scale;
+		float ypos = (y + yOffset) + (this->Characters['H'].Bearing.y - ch.Bearing.y) * scale;
 
-float w = ch.Size.x * scale;
-float h = ch.Size.y * scale;
+		float w = ch.Size.x * scale;
+		float h = ch.Size.y * scale;
 
-float verts[]{
-xpos, ypos + h, 0.0f, 1.0f,
-xpos, ypos,		0.0f, 0.0f,
-xpos + w, ypos, 1.0f, 0.0f,
+		float verts[]{
+		xpos, ypos + h, 0.0f, 1.0f,
+		xpos, ypos,		0.0f, 0.0f,
+		xpos + w, ypos, 1.0f, 0.0f,
 
-xpos, ypos + h, 0.0f, 1.0f,
-xpos + w, ypos, 1.0f, 0.0f,
-xpos + w, ypos + h, 1.0f, 1.0f
-};
+		xpos, ypos + h, 0.0f, 1.0f,
+		xpos + w, ypos, 1.0f, 0.0f,
+		xpos + w, ypos + h, 1.0f, 1.0f
+	};
 
-glBindTexture(GL_TEXTURE_2D, ch.TextureID);
-glBindBuffer(GL_ARRAY_BUFFER, VBO);
-glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(verts), verts);
-glDrawArrays(GL_TRIANGLES, 0, 6);
-x += (ch.Advance >> 6) * scale;// 1/64 * ch.Advance is the value in pixels for how much to go to the next x
-// but 1/64 * ch.Advance is just >> 6 (bitshift right)
-}
+	glBindTexture(GL_TEXTURE_2D, ch.TextureID);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(verts), verts);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+	x += (ch.Advance >> 6) * scale;// 1/64 * ch.Advance is the value in pixels for how much to go to the next x
+	// but 1/64 * ch.Advance is just >> 6 (bitshift right)
+	}
 
-glBindVertexArray(0);
-glBindTexture(GL_TEXTURE_2D, 0);
+	glBindVertexArray(0);
+	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 TextRenderer::~TextRenderer() {

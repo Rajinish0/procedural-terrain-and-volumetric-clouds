@@ -32,6 +32,8 @@ public:
 	void setPitch(float pitch);
 	void setYaw(float yaw);
 	glm::vec3 getRight();
+	glm::vec3 getUp();
+	glm::vec3 getFront();
 	glm::mat4 getView();
 	Camera(float sensitivity = 0.1f);
 

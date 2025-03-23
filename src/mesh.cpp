@@ -70,6 +70,7 @@ Texture::Texture(std::string completePath, Texture::Type type, GLuint S_WRAP, GL
 	this->type = type;
 }
 
+
 void Mesh::setUpMesh() {
 	glGenBuffers(1, &VBO);
 	glGenBuffers(1, &EBO);

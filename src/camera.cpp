@@ -16,6 +16,16 @@ glm::vec3 Camera::getRight() {
 	return s;
 }
 
+glm::vec3 Camera::getFront()
+{
+	return direction;
+}
+
+glm::vec3 Camera::getUp()
+{
+	return glm::cross(getRight(), direction);
+}
+
 void Camera::updateDirection() {
 	direction = 
 	glm::normalize(glm::vec3(
