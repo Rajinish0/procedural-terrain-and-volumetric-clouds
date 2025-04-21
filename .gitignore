@@ -5,3 +5,5 @@ obj/
 main.exe
 
 .vscode
+
+*.swp

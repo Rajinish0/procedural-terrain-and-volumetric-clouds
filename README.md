@@ -28,4 +28,4 @@ To manually build the project with testing included use the `-DBUILD_TESTS=TRUE`
 - install dependencies which are listed in `./install_dependencies.ps1`.
 - build with cmake, use the generator of your preference.
 
-
+You might need to fiddle with the CMakeLists.txt to include the path to your package manager's include directories, for instance. I have not tested this on another OS yet.
