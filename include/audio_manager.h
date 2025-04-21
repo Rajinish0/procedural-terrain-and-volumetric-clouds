@@ -8,6 +8,7 @@
 #include <tuple>
 #include <string>
 #include <vector>
+#include <interfaces/audio_manager_interface.h>
 
 typedef std::tuple<ALuint*, ALuint*, bool> _buf_source_loop;
 
@@ -16,14 +17,15 @@ typedef std::tuple<ALuint*, ALuint*, bool> _buf_source_loop;
     so this only works with .wav for now
 */
 
-class AudioManager{
+class AudioManager : public IAudioManager
+{
 public:
     AudioManager();
     ~AudioManager();
 
     bool isReady;
-    void play2D(std::string filename, bool loop = false);
-    void update();
+    void play2D(const std::string &filename, bool loop = false) override;
+    void update() override;
 
 private:
     ALCdevice* device = nullptr;

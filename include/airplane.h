@@ -20,12 +20,23 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
+#include <interfaces/audio_manager_interface.h>
+
+
+struct AirplaneParameters
+{
+    const std::string &modelPath;
+    const std::string &airDropPath;
+    const std::string &aircraftSound;
+    const std::string &packetSound;
+
+    std::shared_ptr<IAudioManager> audioManager;
+};
+
+
 class Airplane : public Model, public RigidBody {
 public:
-    Airplane(const std::string& path, const std::string& airDropPath,
-             const std::string& aircraftSound, const std::string& packetSound,
-             std::shared_ptr<AudioManager> audioManager
-            );
+    Airplane(const AirplaneParameters &parameters);
 
     void update(float dt);
 
@@ -56,7 +67,7 @@ private:
     Camera *camera = nullptr;
     Window *window = nullptr;
     std::shared_ptr<Model> airDropModel;
-    std::shared_ptr<AudioManager> audioMgr;
+    std::shared_ptr<IAudioManager> audioMgr;
 
     std::vector<Packet> packets;
     float coolDown = -0.1f;
@@ -71,9 +82,9 @@ private:
           roll     =0.0f, 
           yaw      =0.0f;
 
-    void updateParameters();
+    void updateProperties();
 
-    void resetParameters();
+    void resetProperties();
 };
 
 #endif

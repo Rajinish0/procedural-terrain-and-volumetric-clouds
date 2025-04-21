@@ -23,7 +23,7 @@ bool AudioManager::initOpenAL(){
     return true;
 }
 
-void AudioManager::play2D(std::string filename, bool loop){
+void AudioManager::play2D(const std::string &filename, bool loop){
 
     if (!this->isReady){
         std::cerr << "Can't play audio; openAL was not initialized correctly" << std::endl;

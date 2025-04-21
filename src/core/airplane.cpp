@@ -1,23 +1,19 @@
 #include "airplane.h"
 
-Airplane::Airplane(const std::string& path,
-                   const std::string& airDropPath, 
-                   const std::string& aircraftSound,
-                   const std::string& packetSound,
-                   std::shared_ptr<AudioManager> audioManager
-                  )
-    : Model(path),
+Airplane::Airplane(const AirplaneParameters &params)
+    : Model(params.modelPath),
       RigidBody(1.0f, glm::vec3(0.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::mat3(1.0f)*3.0f),
-      audioMgr(audioManager), dropPackage(false), packetSound(packetSound)
+      audioMgr(params.audioManager), dropPackage(false), packetSound(params.packetSound)
     {
-        airDropModel = std::make_shared<Model>(airDropPath);
+        airDropModel = std::make_shared<Model>(params.airDropPath);
         // audioMgr     = std::make_unique<AudioManager>();
         applyForce(glm::vec3(0.0f, 0.0, -10.0f));
-        if (audioMgr) audioMgr->play2D(aircraftSound, true);
+        if (audioMgr) audioMgr->play2D(params.aircraftSound, true);
     }
 
-void Airplane::update(float dt) {
-    if (window) updateParameters();
+void Airplane::update(float dt) 
+{
+    if (window) updateProperties();
     if (camera) updateCameraFeatures();
     auto invRot = glm::inverse(orient);
     glm::vec3 localLinVel = invRot * linearVel;
@@ -83,7 +79,7 @@ void Airplane::update(float dt) {
     if (coolDown > MIN_COOL_DOWN)
         coolDown -= dt;
     
-    resetParameters();
+    resetProperties();
 }
 
 void Airplane::draw(Shader& shader) {
@@ -160,7 +156,7 @@ void Airplane::addConfigParamsToImgui(){
     ImGui::SliderFloat("inducedYawFactor", &inducedYawFactor, 0.0f, 0.5f);   
 }
 
-void Airplane::updateParameters(){
+void Airplane::updateProperties(){
     if (glfwGetKey(window->window, GLFW_KEY_W) == GLFW_PRESS)
         throttle = 0.1;
     if (glfwGetKey(window->window, GLFW_KEY_S) == GLFW_PRESS)
@@ -183,7 +179,7 @@ void Airplane::updateParameters(){
         dropPackage = true;
 }
 
-void Airplane::resetParameters(){
+void Airplane::resetProperties(){
     throttle = 0.0f;
     roll     = 0.0f;
     pitch    = 0.0f;

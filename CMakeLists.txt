@@ -28,8 +28,8 @@ set(RESOURCE_DIRS
     models
     fonts
     textures
-	audio
-	cloud_data
+    audio
+    cloud_data
 )
 
 

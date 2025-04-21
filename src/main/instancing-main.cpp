@@ -152,7 +152,7 @@ int main() {
 	proj = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, near, far);
 
 	
-    glm::mat4 orthoProj = glm::ortho(0.0f, static_cast<float>(800.0f), 
+	glm::mat4 orthoProj = glm::ortho(0.0f, static_cast<float>(800.0f), 
 									 static_cast<float>(600.0f), 0.0f, -1.0f, 1.0f);
 
 	glm::vec4 out = orthoProj*glm::vec4(400.0f, 300.0f, 0.0f, 1.0f);
@@ -202,12 +202,14 @@ int main() {
 	float waterHeight = 5.0f;
 	Plane plane;
 	std::shared_ptr<AudioManager> audioMgr = std::make_shared<AudioManager>();
-	Airplane myAirPlane {"models/plane/a22.obj", 
-						 "models/air_drop/air_drop.obj",
-						 "audio/aircraft.wav",
-						 "audio/parachute.wav",
-						 audioMgr
-						};
+	AirplaneParameters airplaneParams = {
+		"models/plane/a22.obj",
+		"models/air_drop/air_drop.obj",
+		"audio/aircraft.wav",
+		"audio/parachute.wav",
+		audioMgr
+	};
+	Airplane myAirPlane {airplaneParams};
 
 
 	myAirPlane.setPos(glm::vec3(0.0f, 40.0f, 0.0f));
