@@ -83,7 +83,7 @@ public:
         this->camera = camera;
     }
 
-protected:
+public:
     float mass;
     glm::vec3 pos;
     glm::quat orient;
