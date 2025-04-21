@@ -48,6 +48,10 @@ public:
 
     void bindOnDrop(std::function<void()> func);
 
+    const std::vector<Packet> &getPackets();
+
+    bool dropPackage;
+
 private:
     Camera *camera = nullptr;
     Window *window = nullptr;
@@ -55,7 +59,6 @@ private:
     std::shared_ptr<AudioManager> audioMgr;
 
     std::vector<Packet> packets;
-    bool dropPackage;
     float coolDown = -0.1f;
     const float MAX_COOL_DOWN = 3.0f;
     const float MIN_COOL_DOWN = -0.5F;

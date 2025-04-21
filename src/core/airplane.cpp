@@ -195,3 +195,7 @@ void Airplane::bindOnDrop(std::function<void()> func){
     onDrop = func;
 }
 
+const std::vector<Packet> &Airplane::getPackets() 
+{
+    return packets;
+}

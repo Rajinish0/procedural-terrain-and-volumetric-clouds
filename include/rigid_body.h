@@ -83,7 +83,34 @@ public:
         this->camera = camera;
     }
 
-public:
+    glm::vec3 getLinearVel() const {
+        return linearVel;
+    }
+
+    glm::quat getOrient() const {
+        return orient;
+    }
+
+    float getMass() const {
+        return mass;
+    }
+
+    glm::vec3 getAngularVel() const {
+        return angularVel;
+    }
+
+    glm::vec3 getTotalForce() const {
+        return totalForce;
+    }
+
+    glm::vec3 getTotalTorque() const {
+        return totalTorque;
+    }
+
+    float linearDamp, 
+          angularDamp;
+
+protected:
     float mass;
     glm::vec3 pos;
     glm::quat orient;
@@ -92,8 +119,6 @@ public:
     glm::mat3 inverseInertiaTensor;
     glm::vec3 totalForce;
     glm::vec3 totalTorque;
-    float linearDamp, 
-          angularDamp;
     Camera *camera = nullptr;
 
 
