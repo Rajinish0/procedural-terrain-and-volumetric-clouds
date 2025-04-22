@@ -293,7 +293,7 @@ namespace funcs{
 		float tlY = (size - 1)/2.0f;
 
 		int sz = (size - 1) / LOD  + 1;
-		std::cout << "SZ: " << sz << std::endl;
+		// std::cout << "SZ: " << sz << std::endl;
 
 		float x, y;
 
@@ -316,12 +316,12 @@ namespace funcs{
 				// }
 			}
 		}
-		Texture tx;
-		tx.id = TextureFromFile("mud.png", "textures");
-		tx.path = "textures";
-		tx.type = Texture::DIFFUSE;
+		// Texture tx;
+		// tx.id = TextureFromFile("mud.png", "textures");
+		// tx.path = "textures";
+		// tx.type = Texture::DIFFUSE;
 
-		textures.push_back(tx);
+		// textures.push_back(tx);
 
 		for (int i =0; i < sz - 1; ++i){
 			for (int j =0; j < sz - 1; ++j){

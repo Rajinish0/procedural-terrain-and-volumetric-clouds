@@ -23,7 +23,7 @@ const int SIZE = 241;
 const int chunkSize = SIZE - 1;
 const int LODs = 12;
 const int LOD_INC = 2;
-const float SCALE = 50.0f;
+const float SCALE = 100.0f;
 
 // struct ChunkData{
 //     FLOAT_VEC heighData;
@@ -38,6 +38,8 @@ struct _chunkData{
         :heights_and_normals(heights_and_normals){}
 
 };
+
+_chunkData generateChunkData(int size, glm::vec2 center);
 
 struct pair_hash {
     template <typename T1, typename T2>
@@ -93,6 +95,8 @@ public:
     Mesh m1 = funcs::genPlane2(SIZE, 1);
 
     EndlessTerrain(Camera& player, int size = SIZE, float scale = SCALE);
+
+    const E_T_TYPES::PAIR_HEIGHT_LRU_CACHE &getHistory();
 
     // ~EndlessTerrain(){
     //     for (auto& [k, v] : history){

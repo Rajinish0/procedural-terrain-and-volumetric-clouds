@@ -4,9 +4,10 @@
 
 class EmptyContext : public ::testing::Test {
     protected:
-        GLFWwindow* window;
+        static GLFWwindow* window;
         
-        virtual void SetUp() override {
+        static void SetUpTestSuite()
+        {
             ASSERT_TRUE(glfwInit()) << "Failed to initialize GLFW";
             
             // Configure GLFW for hidden window
@@ -27,7 +28,7 @@ class EmptyContext : public ::testing::Test {
                 << "Failed to initialize GLAD";
         }
         
-        virtual void TearDown() override 
+        static void TearDownTestSuite()
         {
             glfwDestroyWindow(window);
             glfwTerminate();

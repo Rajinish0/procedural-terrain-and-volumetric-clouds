@@ -83,8 +83,8 @@ void Shader::setUniformBlockBinding(const std::string& name, int bindingPoint) c
 	glUniformBlockBinding(shaderProg, name_idx, bindingPoint);
 }
 
-unsigned int Shader::getLoc(const std::string& name) const{
-		return glGetUniformLocation(shaderProg, name.c_str());
+int Shader::getLoc(const std::string& name) const{
+	return glGetUniformLocation(shaderProg, name.c_str());
 }
 
 unsigned int Shader::compileShader(GLenum type, std::string& sourceCode) {
@@ -97,6 +97,11 @@ unsigned int Shader::compileShader(GLenum type, std::string& sourceCode) {
 
 	return shdr;
 
+}
+
+unsigned int Shader::getId() const 
+{
+	return shaderProg;
 }
 
 void Shader::use() {

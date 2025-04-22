@@ -34,7 +34,11 @@ std::ostream& operator<<(std::ostream& stream, const Node<Key, Val>& node){
 template <typename Key, typename Val, class hashfunc>
 class LRUCache{
 public:
-	std::unordered_map<Key, Node<Key, Val>*, hashfunc> hashmap;
+
+	using MapType = std::unordered_map<Key, Node<Key, Val>*, hashfunc>;
+	using CIterator = typename MapType::const_iterator;
+
+	MapType hashmap;
 	LRUCache(int capacity)
 		:capacity(capacity){}
 
@@ -44,6 +48,16 @@ public:
 		return hashmap[k]->val;
 		// }
 		// return std::nullopt;
+	}
+
+	CIterator find(const Key &key) const
+	{
+		return hashmap.find(key);
+	}
+
+	CIterator end()
+	{
+		return hashmap.end();
 	}
 
 	void insert(Key k, Val v){

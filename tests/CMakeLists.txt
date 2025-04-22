@@ -67,5 +67,14 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 
 add_test(NAME ${PROJECT_NAME} COMMAND ${PROJECT_NAME})
 
+message(${PROJECT_SOURCE_DIR})
+
+add_custom_command(
+	TARGET ${PROJECT_NAME} POST_BUILD
+	COMMAND ${CMAKE_COMMAND} -E copy_directory
+	${PROJECT_SOURCE_DIR}/resources
+	${CMAKE_CURRENT_BINARY_DIR}/resources
+)
+
 # Optionally, if you need to enable test discovery, uncomment the following:
 # set_target_properties(${PROJECT_NAME} PROPERTIES ENABLE_TEST_DISCOVERY TRUE)

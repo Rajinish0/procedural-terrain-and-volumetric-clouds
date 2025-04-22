@@ -16,8 +16,9 @@ class AirplaneTest : public EmptyContext{
 protected:
     std::shared_ptr<MockAudioManager> mockAudio;
 
-    void SetUp() override {
-        EmptyContext::SetUp();
+    void SetUp() override 
+    {
+        // EmptyContext::SetUp();
         mockAudio = std::make_shared<MockAudioManager>();
     }
 
@@ -33,6 +34,8 @@ protected:
 
     }
 };
+
+GLFWwindow *EmptyContext::window = nullptr;
 
 TEST_F(AirplaneTest, InitializesWithCorrectDefaults) {
     EXPECT_CALL(*mockAudio, play2D(AIRCRAFT_SOUND, true)).Times(1);

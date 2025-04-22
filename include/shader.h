@@ -29,7 +29,8 @@ public :
 	void setVec2(const std::string& name, glm::vec2 value) const;
 	void setMatrix(const std::string& name, glm::mat4 value) const;
 	void setUniformBlockBinding(const std::string& name, int bindingPoint) const;
-	unsigned int getLoc(const std::string& name) const;
+	int getLoc(const std::string& name) const;
+	unsigned int getId() const;
 
 	//unsigned int transformLoc = glGetUniformLocation(ourShader.ID, "transform");
 	//glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));

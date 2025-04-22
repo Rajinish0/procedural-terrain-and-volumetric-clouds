@@ -27,11 +27,21 @@ _chunkData generateChunkData(int size, glm::vec2 center = glm::vec2(0.0f)){
     // std::cout << v[0] << std::endl;
     auto vFunc = [v_size](int i, int j) -> int{return funcs::flatten(i + 1, j + 1, v_size);};
 
+    // const std::vector< std::pair<std::pair<int, int>, std::pair<int, int>>> dpairs 
+    //                                                         { { {1, -1}, {1, 1}  }, 
+    //                                                            { {1, 1}, {-1, 1},  },
+    //                                                            { {-1, 1} , {-1, -1} },
+    //                                                            { {-1, -1} , {1, -1} },
+    //                                                         };
+
+
     const std::vector< std::pair<std::pair<int, int>, std::pair<int, int>>> dpairs 
-                                                            { { {1, -1}, {1, 1}  }, 
-                                                               { {1, 1}, {-1, 1},  },
-                                                               { {-1, 1} , {-1, -1} },
-                                                               { {-1, -1} , {1, -1} },
+                                                            { { {1, 0}, {0, 1} },
+                                                               { {0, 1}, {-1, 1}},
+                                                               { {-1, 1}, {-1, 0} },
+                                                               { {-1, 0}, {0, -1} },
+                                                               { {0, -1}, {1, -1}},
+                                                               { {1, -1}, {1, 0} }
                                                             };
 
     for (int i =0; i < size; ++i){
@@ -258,4 +268,11 @@ void EndlessTerrain::draw(Shader& shader){
             }
         }
     }
+}
+
+
+const E_T_TYPES::PAIR_HEIGHT_LRU_CACHE &
+EndlessTerrain::getHistory()
+{
+    return this->history;
 }
