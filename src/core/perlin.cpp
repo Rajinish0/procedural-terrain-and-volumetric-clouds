@@ -208,7 +208,7 @@ float Perlin2d::noise(float x, float y) {
 
 
 Perlin2d::Perlin2d(int bufferSize, int octaves)
-	:grads(new myVector[bufferSize]), octaves(octaves), sz(bufferSize) {
+	:grads(bufferSize), octaves(octaves), sz(bufferSize) {
 	for (int i = 0; i < bufferSize; ++i) {
 		grads[i] = myVector::rand();
 		//std::cout << grads[i];
@@ -241,5 +241,5 @@ float Perlin2d::perlin(float x, float y) {
 }
 
 Perlin2d::~Perlin2d() {
-	delete[] grads;
+	// delete[] grads;
 }

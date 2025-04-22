@@ -51,7 +51,7 @@ struct myVector {
 
 class Perlin2d {
 private:
-	myVector* grads;
+	std::vector<myVector> grads;
 	int octaves, sz, perm[512];
 
 	static constexpr int p[256] = { 151,160,137,91,90,15,                 // Hash lookup table as defined by Ken Perlin.  This is a randomly
