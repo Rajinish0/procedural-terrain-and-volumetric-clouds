@@ -44,6 +44,19 @@ struct Texture {
 };
 
 
+class InvalidTexture : public std::exception {
+private :
+	std::string message;
+public:
+	std::string what() {
+		return this->message;
+	}
+
+	InvalidTexture(std::string msg)
+		:message(msg) {}
+};
+
+
 class Mesh {
 public:
 	std::vector<Vertex> verticies;

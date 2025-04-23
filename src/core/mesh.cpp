@@ -41,19 +41,6 @@ Mesh& Mesh::operator=(Mesh&& other) noexcept{
 	return *this;
 }
 
-
-class InvalidTexture : public std::exception {
-private :
-	std::string message;
-public:
-	std::string what() {
-		return this->message;
-	}
-
-	InvalidTexture(std::string msg)
-		:message(msg) {}
-};
-
 Texture::Texture(std::string path, std::string directory, Texture::Type type, GLuint S_WRAP, 
 				 GLuint T_WRAP) {
 	this->id = funcs::TextureFromFile(path, directory, S_WRAP, T_WRAP);
