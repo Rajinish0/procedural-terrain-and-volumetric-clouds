@@ -49,7 +49,7 @@ public:
 
     void addConfigParamsToImgui();
 
-    float rollFactor = 0.0f,
+    float rollFactor = REngine::ROLL_FACTOR,
           stabilizingRollFactor = REngine::STABILIZING_ROLL,
           pitchSpeed = REngine::PITCH_SPEED,
           yawSpeed = REngine::YAW_SPEED,

@@ -47,7 +47,7 @@ void Airplane::update(float dt)
     applyRelativeTorque(glm::vec3(
         (pitch*(1-std::fabs(currentPitch)) + stabilizingPitch + inducedPitch) * pitchSpeed,
         (yaw + inducedYaw) * yawSpeed,      // Yaw (direct + induced)
-        (roll*.75+stabilizingRoll*stabilizingRollFactor) * rollSpeed                      // Roll
+        (roll*rollFactor+stabilizingRoll*stabilizingRollFactor) * rollSpeed                      // Roll
     ));
 
     RigidBody::update(dt);
