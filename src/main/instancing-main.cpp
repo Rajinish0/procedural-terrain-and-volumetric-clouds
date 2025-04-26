@@ -158,8 +158,8 @@ int main() {
 	glm::mat4 orthoProj = glm::ortho(0.0f, static_cast<float>(800.0f), 
 									 static_cast<float>(600.0f), 0.0f, -1.0f, 1.0f);
 
-	glm::vec4 out = orthoProj*glm::vec4(400.0f, 300.0f, 0.0f, 1.0f);
-	printVec4(out);
+	// glm::vec4 out = orthoProj*glm::vec4(400.0f, 300.0f, 0.0f, 1.0f);
+	// printVec4(out);
 	glm::mat4 planeModel = glm::rotate(
 		glm::mat4(1.0f), 
 		glm::radians(90.0f),
