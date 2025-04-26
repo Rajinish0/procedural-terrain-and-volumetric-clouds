@@ -40,9 +40,8 @@ TEST(RigidBodyTest, AppliesTorqueAndRotates) {
     body.update(1.0f);
 
     glm::vec3 direction = body.getDirection();
-    //EXPECT_NEAR(glm::dot(direction, glm::vec3(0, 0, -1)), 1.0f, 0.1f); // Should still face -Z with small torque
-    EXPECT_LT(glm::dot(direction, glm::vec3(0, 0, -1)), 0.99f); // Should be < 1 if it rotated
-    EXPECT_GT(glm::length(direction), 0.99f); // Still normalized
+    EXPECT_LT(glm::dot(direction, glm::vec3(0, 0, -1)), 0.99f);
+    EXPECT_GT(glm::length(direction), 0.99f);
 }
 
 
@@ -63,11 +62,10 @@ TEST(RigidBodyTest, ForceAtPointGeneratesTorque) {
 
 TEST(RigidBodyTest, ApplyRelativeForceInLocalSpace) {
     glm::mat4 inertiaTensor = glm::mat4(1.0f);
-    glm::quat rot = glm::angleAxis(glm::radians(90.0f), glm::vec3(0, 1, 0)); // facing +X
-    std::cout << rot.w << ' ' << rot.x << ' ' << rot.y << ' ' << rot.z << std::endl;
+    glm::quat rot = glm::angleAxis(glm::radians(90.0f), glm::vec3(0, 1, 0));
     RigidBody body(1.0f, glm::vec3(0), rot, inertiaTensor);
 
-    body.applyRelativeForce(glm::vec3(0, 0, -10)); // local -Z should become global +X
+    body.applyRelativeForce(glm::vec3(0, 0, -10));
     body.update(1.0f);
 
     glm::vec3 pos = body.getPos();

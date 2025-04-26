@@ -29,12 +29,13 @@ public:
          pkt_model(model),
          gravity(gravity)
          {
-            this->linearDamp = 1.0f;            
+            this->linearDamp = 1.0f;
+            this->angularDamp = 0.3f;
             std::random_device rd;
             std::mt19937 gen(rd());
-            std::uniform_real_distribution<float> dist(-50.0f, 50.0f);  // More noticeable range
+            std::uniform_real_distribution<float> dist(-10.0f, 10.0f);
     
-            glm::vec3 randomTorque = glm::vec3(dist(gen), dist(gen), dist(gen)); // Adjust values for more/less tumbling
+            glm::vec3 randomTorque = glm::vec3(dist(gen), dist(gen), dist(gen));
             applyTorque(randomTorque);
          }
 

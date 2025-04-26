@@ -18,12 +18,13 @@ namespace REngine{
     constexpr float SIGMA 		       = 1.178f;
     constexpr float HG			       = 0.119f;
     constexpr float WIND_SPEED         = 10.0f;
-    constexpr float MAX_THROTTLE       = 69.0f;
-    constexpr float ROLL_SPEED         = 43.0f;
-    constexpr float YAW_SPEED          = 43.0f;
+    constexpr float MAX_THROTTLE       = 198.0f;
+    constexpr float ROLL_SPEED         = 32.175f;
+    constexpr float YAW_SPEED          = 32.175f;
     constexpr float PITCH_SPEED        = 20.0f;
-    constexpr float INDUCED_YAW_FACTOR = 0.07f;
+    constexpr float INDUCED_YAW_FACTOR = 0.055f;
     constexpr float STABILIZING_ROLL   = 0.5f;
+    constexpr float ROLL_FACTOR        = 0.75f;
     constexpr float FAR_VIEW           = 500.0f;
     constexpr float NEAR_VIEW          = 0.1f;
 };

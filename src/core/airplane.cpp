@@ -5,9 +5,10 @@ Airplane::Airplane(const AirplaneParameters &params)
       RigidBody(1.0f, glm::vec3(0.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::mat3(1.0f)*3.0f),
       audioMgr(params.audioManager), dropPackage(false), packetSound(params.packetSound)
     {
+        this->linearDamp = 0.5f;
+        this->angularDamp = 0.3f;
         airDropModel = std::make_shared<Model>(params.airDropPath);
-        // audioMgr     = std::make_unique<AudioManager>();
-        applyForce(glm::vec3(0.0f, 0.0, -10.0f));
+        applyForce(glm::vec3(0.0f, 0.0, -1.0f));
         if (audioMgr) audioMgr->play2D(params.aircraftSound, true);
     }
 
@@ -19,35 +20,30 @@ void Airplane::update(float dt)
     glm::vec3 localLinVel = invRot * linearVel;
     glm::vec3 localAngVel = invRot * angularVel;
 
-    float angleOfAttack = std::atan2(-localLinVel.y, localLinVel.z);
-    float angleOfYaw = std::atan2(localLinVel.x, localLinVel.z);
+    // glm::vec3 drag = -dragCoeff * glm::length2(linearVel) * linearVel;
+    // applyForce(drag);
+
+    // float angleOfAttack = std::atan2(-localLinVel.y, localLinVel.z);
+    // float angleOfYaw = std::atan2(localLinVel.x, localLinVel.z);
     float speed = glm::length(localLinVel);
     glm::vec3 rightVector = orient * glm::vec3(1, 0, 0);
     float currentRoll = std::atan2(rightVector.y, std::fabs(rightVector.x));
-    // std::cout << currentRoll << std::endl; 
 
     glm::vec3 frontVector = orient * glm::vec3(0, 0, -1);
     float currentPitch  = std::atan2(frontVector.y, glm::length(glm::vec2(frontVector.x, frontVector.z)));
-    // std::cout << currentPitch << std::endl;
-    // // Calculate self-stabilizing roll force
     float stabilizingRoll = 0.0f;
     if (std::fabs(currentRoll) > 0.1){
-        stabilizingRoll = -currentRoll * 0.1f;  // Increases with speed
-        // stabilizingRoll *= (1.0f - std::fabs(currentRoll) * 0.1f);  // Damp as roll increases
+        stabilizingRoll = -currentRoll * 0.1f;
     }
 
     float stabilizingPitch = 0.0f;
     if (std::fabs(currentPitch) > 0.1)
-        stabilizingPitch = -currentPitch * 0.05f;  // Increases with speed
+        stabilizingPitch = -currentPitch * 0.05f;
 
-    // Apply thrust
     applyRelativeForce(glm::vec3(0.0f, 0.0f, -1.0f) * throttle * maxThrottle);
-    // Natural yaw induced by roll (when you roll, the lift vector tilts, causing turning)
     float inducedYaw = currentRoll * inducedYawFactor;      
     float inducedPitch = -std::fabs(roll) * .1f;
     
-    // std::cout << angleOfAttack << std::endl;
-    // Control forces
     applyRelativeTorque(glm::vec3(
         (pitch*(1-std::fabs(currentPitch)) + stabilizingPitch + inducedPitch) * pitchSpeed,
         (yaw + inducedYaw) * yawSpeed,      // Yaw (direct + induced)
@@ -69,12 +65,10 @@ void Airplane::update(float dt)
         if (audioMgr) audioMgr->play2D(packetSound);
 
         onDrop();
-        // std::cout << "DROPPING PACKAGE " << std::endl;
     }
 
     for (Packet& pkt : packets)
         pkt.update(dt);
-    // audioMgr->update();
     
     if (coolDown > MIN_COOL_DOWN)
         coolDown -= dt;
@@ -115,8 +109,10 @@ void Airplane::attach(Window *window){
 void Airplane::updateCameraFeatures() {
     glm::vec3 targetPosition = this->pos - glm::normalize(getDirection()) * 10.0f;
 
+    //TO DO: the smooth factor should be FPS dependent.
     float smoothFactor = 0.1f;
-    camera->position = glm::mix(camera->position, targetPosition, smoothFactor);
+    // camera->position = glm::mix(camera->position, targetPosition, smoothFactor);
+    camera->position = targetPosition;
 
     glm::vec3 direction = glm::normalize(getDirection());
     // std::cout << direction.z << ' ' << direction.x << std::endl;
@@ -152,8 +148,9 @@ void Airplane::addConfigParamsToImgui(){
     ImGui::SliderFloat("pitchSpeed", &pitchSpeed, 0.0f, 50.0f);
     ImGui::SliderFloat("yawSpeed", &yawSpeed, 0.0f, 50.0f);
     ImGui::SliderFloat("rollSpeed", &rollSpeed, 0.0f, 50.0f);
-    ImGui::SliderFloat("maxThrottle", &maxThrottle, 0.0f, 100.0f);
+    ImGui::SliderFloat("maxThrottle", &maxThrottle, 0.0f, 5000.0f);
     ImGui::SliderFloat("inducedYawFactor", &inducedYawFactor, 0.0f, 0.5f);   
+    ImGui::SliderFloat("Drag Coefficient", &dragCoeff, 0.0f, 10.0f);
 }
 
 void Airplane::updateProperties(){

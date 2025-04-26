@@ -6,14 +6,19 @@
 #include <glm/gtc/type_ptr.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
-#include "camera.h"
 #include "debug.h"
+
+/* 
+This is not fully general yet, see the thesis:
+the full equation for torque is T = Ia + w x Iw
+so a = inv(I)(T - w x Iw) would be the actual equation.
+*/
 
 class RigidBody{
 public:
     RigidBody (float mass, glm::vec3 pos, glm::quat orient, glm::mat4 inertiaTensor, 
                glm::vec3 linearVel = {0.0f, 0.0f, 0.0f}, glm::vec3 angularVel = {0.0f, 0.0f, 0.0f},
-               float linearDamp = 0.99f, float angularDamp = 0.75f)
+               float linearDamp = 0.99f, float angularDamp = 0.99f)
         :mass(mass), pos(pos), orient(orient), linearVel(linearVel), angularVel(angularVel), 
          inverseInertiaTensor(glm::inverse(inertiaTensor)), totalForce(0.0f), totalTorque(0.0f),
          linearDamp(linearDamp), angularDamp(angularDamp)
@@ -22,7 +27,6 @@ public:
          }
     
     void update(float dt){
-        if (camera) updateCameraFeatures();
         glm::vec3 linearAcc = totalForce / mass;
         linearVel += linearAcc * dt;
         pos += linearVel * dt;
@@ -33,8 +37,8 @@ public:
         orient += 0.5f * glm::quat(0.0f, angularVel * dt) * orient;
         orient = glm::normalize(orient);
 
-        angularVel *= angularDamp;
-        linearVel *= linearDamp;
+        angularVel *= std::pow(angularDamp, dt);
+        linearVel *= std::pow(linearDamp, dt);
 
         resetExternalForces();
     }
@@ -79,10 +83,6 @@ public:
         return glm::inverse(orient) * linearVel;
     }
 
-    void mount(Camera *camera){
-        this->camera = camera;
-    }
-
     glm::vec3 getLinearVel() const {
         return linearVel;
     }
@@ -119,7 +119,6 @@ protected:
     glm::mat3 inverseInertiaTensor;
     glm::vec3 totalForce;
     glm::vec3 totalTorque;
-    Camera *camera = nullptr;
 
 
     void resetExternalForces(){
@@ -131,11 +130,6 @@ protected:
         return glm::mat3(orient) * point + pos; 
     }
 
-    void updateCameraFeatures(){
-        glm::vec3 direc = getDirection();
-        camera->position = this->pos - direc * 10.0f;
-        camera->direction = direc;
-    }
 };
 
 #endif

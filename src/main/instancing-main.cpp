@@ -57,6 +57,9 @@ float moveVel = 0.015f;
 float cloudHeight = 155.5f;
 unsigned int texture2, skboxTexture;
 float dt = 0.007f;
+float timeBetweenFrames = 0.0f;
+float lT = 0.0f;
+float avg = 0.0f;
 float lastTime = NULL;
 
 
@@ -260,8 +263,10 @@ int main() {
 	glm::vec2 randCoords = funcs::genRandomCoords2d();
 	while (!window.shouldClose())
 	{
-
-		fps = 1.0f/(glfwGetTime()- lastTime);
+		float t = glfwGetTime();
+		timeBetweenFrames = t - lT;
+		lT = t;
+		fps = 1.0f/(timeBetweenFrames);
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
@@ -364,8 +369,8 @@ int main() {
 
 		// CloudSystem.update(fbo);
 		// CloudSystem.draw(screenShdr);
-		
-		myGame.update(1.0f/60.0f);
+		avg = timeBetweenFrames * 0.1 + avg * 0.9;
+		myGame.update(avg);
 		myGame.draw(textShader, screenShdr, spriteShader);
 
 		audioMgr->update();

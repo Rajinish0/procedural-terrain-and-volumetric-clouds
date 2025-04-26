@@ -55,7 +55,8 @@ public:
           yawSpeed = REngine::YAW_SPEED,
           rollSpeed = REngine::ROLL_SPEED,
           maxThrottle =  REngine::MAX_THROTTLE,
-          inducedYawFactor = REngine::INDUCED_YAW_FACTOR;
+          inducedYawFactor = REngine::INDUCED_YAW_FACTOR,
+          dragCoeff = 0.1f;
 
     void bindOnDrop(std::function<void()> func);
 
