@@ -13,28 +13,14 @@ _chunkData generateChunkData(int size, glm::vec2 center = glm::vec2(0.0f)){
 	Perlin2d perlin(256, 8);
 	for (int i =-1; i < size + 1; ++i){
 		for (int j =-1; j < size + 1; ++j){
-			// if (j == size)
-				// x = (center.x + chunkSize + tlX) * scale;
-			// else
 			x = (center.x + tlX + (float)j) * scale;
 			y = (center.y + tlY - (float)i) * scale;
 			float p = perlin.perlin(x, y);
 			v[funcs::flatten(i + 1, j + 1, v_size )] = p;
-			// if (i != size && j != size)
-			// v[funcs::flatten(i, j, size)] = p;
 		}
 	}
 
-	// std::cout << v[0] << std::endl;
 	auto vFunc = [v_size](int i, int j) -> int{return funcs::flatten(i + 1, j + 1, v_size);};
-
-	// const std::vector< std::pair<std::pair<int, int>, std::pair<int, int>>> dpairs 
-	//                                                         { { {1, -1}, {1, 1}  }, 
-	//                                                            { {1, 1}, {-1, 1},  },
-	//                                                            { {-1, 1} , {-1, -1} },
-	//                                                            { {-1, -1} , {1, -1} },
-	//                                                         };
-
 
 	const std::vector< std::pair<std::pair<int, int>, std::pair<int, int>>> dpairs 
 															{ { {1, 0}, {1, 1} },
@@ -54,7 +40,6 @@ _chunkData generateChunkData(int size, glm::vec2 center = glm::vec2(0.0f)){
 				auto [dy2, dx2] = p2;
 				float height2 = v[ vFunc(i+dy1, j+dx1) ];
 				float height3 = v[ vFunc(i+dy2, j+dx2) ];
-				// glm::vec3 norm(0.0f);
 				glm::vec3 v1 = glm::vec3(((float)j),  height * REngine::MAX_TERRAIN_HEIGHT, (float)i);
 				glm::vec3 v2 = glm::vec3(((float)j+dx1),  height2 * REngine::MAX_TERRAIN_HEIGHT, (float)(i+dy1));
 				glm::vec3 v3 = glm::vec3(((float)j+dx2),  height3 * REngine::MAX_TERRAIN_HEIGHT, (float)(i+dy2));
@@ -62,36 +47,7 @@ _chunkData generateChunkData(int size, glm::vec2 center = glm::vec2(0.0f)){
 				glm::vec3 dy = v2 - v1;
 				glm::vec3 dx = v3 - v1;
 				norm += glm::cross(dy, dx);
-				// break;
 			}
-			// float height2 = v[ vFunc(i+1, j+1) ];
-			// float height3 = v[ vFunc(i+1, j-1) ];
-			// // glm::vec3 norm(0.0f);
-			// glm::vec3 v1 = glm::vec3(((float)j),  height * REngine::MAX_TERRAIN_HEIGHT, (float)i);
-			// glm::vec3 v2 = glm::vec3(((float)j+1),  height2 * REngine::MAX_TERRAIN_HEIGHT, (float)i+1);
-			// glm::vec3 v3 = glm::vec3(((float)j-1),  height3 * REngine::MAX_TERRAIN_HEIGHT, (float)i+1);
-
-			// glm::vec3 dy = v2 - v1;
-			// glm::vec3 dx = v3 - v1;
-			// glm::vec3 norm = glm::cross(dx, dy);
-
-			// for (int dy : dys ){
-			//     float height_dy = v[ vFunc(i + dy, j) ];
-			//     glm::vec3 v3 = glm::vec3(((float)(j)),  height_dy * REngine::MAX_TERRAIN_HEIGHT, (float)(i+dy));
-			//     for (int dx : dxs){
-			//         float height_dx = v[ vFunc(i + dy, j + dx) ];
-			//         // data.heights[funcs::flatten(i, j, size)] = height;
-
-
-			//         glm::vec3 v2 = glm::vec3(((float)(j+dx)) , height_dx * REngine::MAX_TERRAIN_HEIGHT, (float)(i+dy));
-
-			//         glm::vec3 dxx = v2 - v1;
-			//         glm::vec3 dyy = v3 - v1;
-
-			//         norm += glm::cross(dyy, dxx);
-			//         // n = (n + 1.0f)/2.0f;
-			//     }
-			// }
 			norm = glm::normalize(norm);
 			norm = (norm + 1.0f)/2.0f;
 			data.heights_and_normals[funcs::flatten(i, j, size)] = glm::vec4(height, norm.x, norm.y, norm.z);
@@ -240,7 +196,6 @@ void EndlessTerrain::draw(Shader& shader){
 	int y = std::floor((player.position.z + gridSize) / scale);
 
 	glm::vec3 dir = player.direction;
-	// printVec3(dir);
 
 	for (int di =-10; di <=10; ++di){
 		for (int dj =-10; dj <=10; ++dj){
@@ -249,9 +204,7 @@ void EndlessTerrain::draw(Shader& shader){
 			
 			if (dir.x * dj + (dir.z)*(di) < 0.0f) continue;
 			if (history.count( {ni, nj} ) == 0){
-				// std::cout << "INSERTING " << std::endl;
 				history.insert({ni, nj}, std::make_shared<HeightMapWrapper>(size, glm::vec2((float)nj *chunkSize, (float)ni * chunkSize)));
-				// std::cout << "INSERTED " << std::endl;
 			}
 
 			std::shared_ptr<HeightMapWrapper> chunk = history[{ni, nj}];
@@ -265,7 +218,9 @@ void EndlessTerrain::draw(Shader& shader){
 				shader.setInt("heightMap", 1);
 				shader.setInt("normalMap", 2);
 				chunk->bind();
-				LODMeshes[(std::max(std::abs(di), std::abs(dj)))/3.0f].draw(shader);
+                size_t lodMesh = (std::max(std::abs(di), std::abs(dj)))/3.0f;
+                lodMesh = std::min(lodMesh, LODMeshes.size() - 1);
+				LODMeshes[lodMesh].draw(shader);
 			}
 		}
 	}
