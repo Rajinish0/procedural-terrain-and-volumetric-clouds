@@ -96,7 +96,7 @@ bool showCfg = true;
 int main() {
 	// stbi_set_flip_vertically_on_load(true);
 
-	Window window(800, 600);
+	Window window(800, 600, "Procedural Terrain And Clouds");
 
 
 	glfwSetFramebufferSizeCallback(window.window, framebuffer_size_callback);

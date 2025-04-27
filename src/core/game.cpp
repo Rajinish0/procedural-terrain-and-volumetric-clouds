@@ -170,8 +170,8 @@ namespace game {
 	}
 
 	void Game::addConfigParamsToImgui(){
-		ImGui::ColorEdit3("Text Color", &params->coordsTextColor[0]);
-		ImGui::ColorEdit3("Target Text Color", &params->tCoordsTextColor[0]);
+		// ImGui::ColorEdit3("Text Color", &params->coordsTextColor[0]);
+		// ImGui::ColorEdit3("Target Text Color", &params->tCoordsTextColor[0]);
 	}
 
 	Game::~Game(){
