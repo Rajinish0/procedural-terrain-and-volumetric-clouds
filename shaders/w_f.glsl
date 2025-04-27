@@ -24,6 +24,12 @@ const float maxDist = 20.0f;
 float shineDamper = 30.0f;
 float reflectivity = 0.6f;
 
+vec3 applyFog(vec3 originalColor, float distance) {
+    float fogAmt = 1.0 - exp(-distance*.0004);
+    vec3 fogColor = vec3(0.529,0.708,0.922);//vec3(0.5, 0.6, 0.7);
+    return mix(originalColor, fogColor, fogAmt);
+}
+
 
 void main(){
 
@@ -83,8 +89,14 @@ void main(){
     // fragcol = mix(texture(t1, reflect_c), texture(t2, refrect_c), d);
     // fragcol = mix(fragcol, vec4(0.0, 0.3, 0.5, 1.0), 0.2);
     vec3 tempcol = mix(texture(t1, reflect_c), texture(t2, refrect_c), d).xyz;
-    tempcol = mix(tempcol, vec3(0.0, 0.3, 0.5), 0.2);
+    // tempcol = mix(tempcol, vec3(0.0, 0.3, 0.5), 0.2);
+
+    vec3 shallowColor = vec3(0.3, 0.5, 0.6);
+    vec3 deepColor = vec3(0.0, 0.2, 0.3);
+    vec3 waterColor = mix(shallowColor, deepColor, clamp(waterDepth/20.0, 0.0, 1.0));
+    tempcol = mix(tempcol, waterColor, 0.3);
     tempcol += specularHighlights;
+
     float fin_alpha = clamp(waterDepth/5.0f, 0.0, 1.0);
     // tempcol = mix(tempcol, skycolor, alpha);
     // tempcol = (1-alpha)*tempcol + alpha*skycolor;
