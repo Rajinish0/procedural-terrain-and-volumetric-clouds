@@ -46,16 +46,7 @@ void processInput(GLFWwindow* window);
 void mouse_callback(GLFWwindow* window, double xPos, double yPos);
 
 
-float densityThreshold = REngine::DENSITY_THRESHOLD;
-float scale 		   = REngine::SCALE;
-float weatherScale     = REngine::WEATHER_SCALE;
-float higherScale 	   = REngine::HIGHER_SCALE;
-float SIGMA 		   = REngine::SIGMA;
-float HG			   = REngine::HG;
-float moveFac = 0.0f;
-float moveVel = 0.015f;
 float cloudHeight = 155.5f;
-unsigned int texture2, skboxTexture;
 float dt = 0.007f;
 float timeBetweenFrames = 0.0f;
 float lT = 0.0f;
@@ -63,21 +54,8 @@ float avg = 0.0f;
 float lastTime = NULL;
 
 
-
-
-template <typename T>
-T randNum(T min, T max){
-	T dist = (max - min);
-	float random_number = static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX);
-	return (min + dist*random_number);
-}
-
-
 Camera camera;
 
-glm::vec3 lightPos = glm::vec3(-1.0f, 7.0f, 2.0f);
-
-float planeRoll = 0.0f;
 float fps;
 
 bool showCfg = true;
@@ -133,12 +111,11 @@ int main() {
 	glm::mat4 view(1.0f);
 	glm::mat4 proj(1.0f);
 	glm::mat4 invProj(1.0f);
-	glm::mat4 invView(1.0f);
 	glm::vec3 lpos(1.2f, 0.0f, 1.0f);
 	model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 	view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
-	const float near = 0.1f;
-	const float far  = 500.0f;
+	const float near = REngine::NEAR_VIEW;
+	const float far  = REngine::FAR_VIEW;
 	proj = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, near, far);
 
 	
@@ -148,7 +125,6 @@ int main() {
 
 
 	invProj = glm::inverse(proj);
-	invView = glm::inverse(view);
 	camera.position = glm::vec3(0.0f);
 
 	shader4.use();
@@ -301,38 +277,8 @@ void processInput(GLFWwindow* window)
 	dt = (cTime - lastTime) * 5;
 	lastTime = cTime;
 
-	moveFac += moveVel * dt;
-	moveFac -= (int)moveFac;
-
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
-
-	if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
-		densityThreshold += 0.001f;
-	
-	if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS)
-		densityThreshold -= 0.001f;
-
-
-	if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS)
-		// higherScale += .01f;
-		HG += 0.001;
-	
-	if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS)
-		// higherScale -= .01f;
-		HG -= 0.001;
-
-	if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS)
-		weatherScale += 0.0001f;
-
-	if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS)
-		weatherScale -= 0.0001f;
-
-	if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS)
-		SIGMA += 0.001f;
-
-	if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS)
-		SIGMA -= 0.001f;
 
 	if (glfwGetKey(window, GLFW_KEY_F1) == GLFW_PRESS && 
 		glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
