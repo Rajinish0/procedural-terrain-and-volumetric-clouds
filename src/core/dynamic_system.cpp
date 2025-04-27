@@ -5,7 +5,8 @@ DynamicSystem::DynamicSystem(Camera& camera, Shader& shader, Shader& normalShade
     float waterHeight, glm::vec3 sunDirection)
         :camera(camera), shader(shader), normalShader(normalShader), airplaneShader(airplaneShader),
         waterShader(waterShader), airplane(airplane), terrain(camera), waterHeight(waterHeight), 
-        dudv("textures/dudv.png", Texture::DIFFUSE, GL_REPEAT, GL_REPEAT), moveFac(0.0f)
+        dudv("textures/dudv.png", Texture::DIFFUSE, GL_REPEAT, GL_REPEAT), moveFac(0.0f), 
+        normalMap("textures/normal_map.png", Texture::DIFFUSE, GL_REPEAT, GL_REPEAT)
         {
             shader.use();
             shader.setFloat("maxHeight", maxHeight);
@@ -21,6 +22,9 @@ DynamicSystem::DynamicSystem(Camera& camera, Shader& shader, Shader& normalShade
             waterShader.setInt("t1", 0);
             waterShader.setInt("t2", 1);
             waterShader.setInt("dudv", 2);
+            waterShader.setInt("normalMap", 3);
+            waterShader.setInt("depthMap", 4);
+            waterShader.setVec3("sunDirection", sunDirection);
         }
 
 void DynamicSystem::update(float dt){
@@ -94,6 +98,12 @@ void DynamicSystem::draw(FrameBuffer& fbo){
 
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, dudv.id);
+
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D, normalMap.id);
+
+        glActiveTexture(GL_TEXTURE4);
+        glBindTexture(GL_TEXTURE_2D, fb2.depthTextureId);
 
         glBindVertexArray(plane.VAO);
         glDrawArrays(GL_TRIANGLES, 0, 6);

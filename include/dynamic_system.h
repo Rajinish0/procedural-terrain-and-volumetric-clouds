@@ -31,6 +31,7 @@ public:
     float waterHeight;
     FrameBuffer fb, fb2;
     Texture dudv;
+    Texture normalMap;
     Plane plane;
     float moveFac;
     float moveVel = 0.015f;
