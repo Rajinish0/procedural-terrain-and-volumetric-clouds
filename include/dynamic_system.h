@@ -16,15 +16,9 @@ public:
                   Airplane& airplane, float maxHeight, float waterHeight,
                   glm::vec3 sunDirection);
 
-    // #ifdef DRAW_WATER
-    // DynamicSystem(Camera& camera, Shader& shader, Shader& airplaneShader, Shader& waterShader,
-    //               Airplane& airplane, float maxHeight, glm::vec3 sunDirection, 
-    //               float waterHeight, float moveFac);
-    // #endif
-
     void update(float dt);
-
     void draw(FrameBuffer& fbo);
+    void addConfigParamsToImgui();
 
 public:
     Camera& camera;
@@ -40,6 +34,9 @@ public:
     Plane plane;
     float moveFac;
     float moveVel = 0.015f;
+    bool drawWater = false;
+    bool drawNormals = false;
+    bool lineMode = false;
 };
 
 #endif

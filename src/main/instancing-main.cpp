@@ -72,16 +72,6 @@ T randNum(T min, T max){
 	return (min + dist*random_number);
 }
 
-inline std::ostream& operator<<(std::ostream& os, const glm::vec2& v){
-	os << '(' << v.x << ', ' << v.y << ')';
-	return os;
-}
-
-std::ostream& operator<<(std::ostream& os, const glm::vec3& v){
-	os << '(' << v.x << ', ' << v.y << ', ' << v.z << ')';
-	return os;
-}
-
 
 Camera camera;
 
@@ -94,8 +84,6 @@ bool showCfg = true;
 
 
 int main() {
-	// stbi_set_flip_vertically_on_load(true);
-
 	Window window(800, 600, "Procedural Terrain And Clouds");
 
 
@@ -107,7 +95,6 @@ int main() {
 		std::cout << "Failed to initliaze GLAD" << std::endl;
 		return -1;
 	}
-	// EndlessTerrain terr(camera);
 
 	 ComputeShader computeShdr {
 		"shaders/compute.glsl"
@@ -158,14 +145,6 @@ int main() {
 	glm::mat4 orthoProj = glm::ortho(0.0f, static_cast<float>(800.0f), 
 									 static_cast<float>(600.0f), 0.0f, -1.0f, 1.0f);
 
-	// glm::vec4 out = orthoProj*glm::vec4(400.0f, 300.0f, 0.0f, 1.0f);
-	// printVec4(out);
-	glm::mat4 planeModel = glm::rotate(
-		glm::mat4(1.0f), 
-		glm::radians(90.0f),
-		glm::vec3(1.0f, 0.0f, 0.0f)
-	);
-
 
 
 	invProj = glm::inverse(proj);
@@ -192,8 +171,6 @@ int main() {
 
 	spriteShader.use();
 	spriteShader.setMatrix("proj", orthoProj);
-
-	glm::vec3 lightPos(3.0f, 2.0f, 0.0f);
 
 
 	fbo.setClearColor(glm::vec4(0.529,0.708,0.922, 1.0f));
@@ -271,104 +248,13 @@ int main() {
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
-
-		// terrainSystem.update( 1.0f/60.0f );
-
-
 		glEnable(GL_BLEND);
 		glEnable(GL_CLIP_DISTANCE0);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		processInput(window.window);
 		glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		view = camera.getView();
 
-
-		// fbo.Bind();
-
-		#if LINE_MODE
-		glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
-		#endif
-
-
-		#ifdef DRAW_WATER
-		// shader4.setMatrix("view", camera.getView());
-		float offSet = 2*(camera.position.y - waterHeight);
-		camera.position = glm::vec3(camera.position.x, 
-								 camera.position.y - offSet,
-								 camera.position.z);//camera.position.y -= offSet;
-		camera.pitch = -camera.pitch;
-		camera.updateDirection();
-		shader4.setMatrix("view", camera.getView());
-		shader4.setVec4("planeNorm", glm::vec4(0.0f, 1.0f, 0.0f, -waterHeight));
-		fb.Bind();
-		terrainSystem.terrain.draw(shader4);
-		fb.unBind();
-
-		camera.position = glm::vec3(camera.position.x, 
-								 camera.position.y + offSet,
-								 camera.position.z);
-		camera.pitch = -camera.pitch;
-		camera.updateDirection();
-		shader4.setMatrix("view", camera.getView());
-		shader4.setVec4("planeNorm", glm::vec4(0.0f,-1.0f, 0.0f, waterHeight));
-		fb2.Bind();
-		terrainSystem.terrain.draw(shader4);
-		fb2.unBind();
-
-		#endif
-
-		// fbo.Bind();
-		
-
-
-		#if LINE_MODE
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		#endif
-
-		// glEnable(GL_BLEND);
-		// glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-		// glEnable(GL_DEPTH_TEST);
-		// glDisable(GL_CLIP_DISTANCE0);
-		#ifdef DRAW_WATER
-		waterShader.use();
-		waterShader.setMatrix("proj", proj);
-		waterShader.setMatrix("view", camera.getView());
-		glm::mat4 m =glm::translate(glm::mat4(1.0f), glm::vec3(camera.position.x, waterHeight, camera.position.z));
-		glm::mat4 m2 = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-		glm::mat4 m3 =glm::scale(glm::mat4(1.0f), glm::vec3((50.0f*20.0f)/2.0f));
-		waterShader.setMatrix("model", m*m2*m3);
-
-		waterShader.use();
-		waterShader.setInt("t1", 0);
-		waterShader.setInt("t2", 1);
-		waterShader.setInt("dudv", 2);
-		waterShader.setFloat("moveFac", moveFac);
-		waterShader.setVec3("cameraPos", camera.position);
-		waterShader.setVec3("planeNorm", glm::vec3(0.0f, 1.0f, 0.0f));
-
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, fb.textureId);
-
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, fb2.textureId);
-
-		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D, dudv.id);
-
-		glBindVertexArray(plane.VAO);
-		glDrawArrays(GL_TRIANGLES, 0, 6);
-		glBindVertexArray(0);
-		#endif
-
-
-		// terrainSystem.draw(fbo);
-
-		// // fbo.unBind();
-
-		// CloudSystem.update(fbo);
-		// CloudSystem.draw(screenShdr);
 		avg = timeBetweenFrames * 0.1 + avg * 0.9;
 		myGame.update(avg);
 		myGame.draw(textShader, screenShdr, spriteShader);
@@ -381,8 +267,8 @@ int main() {
 			ImGui::Text(("FPS: " + std::to_string(fps)).c_str());
 			myAirPlane.addConfigParamsToImgui();
 			CloudSystem.addConfigParamsToImgui();
+			terrainSystem.addConfigParamsToImgui();
 			myGame.addConfigParamsToImgui();
-			// ImGui::ColorEdit3("Text Color", &textColor.r);
 			ImGui::End();
 		}
 		ImGui::Render();

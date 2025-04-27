@@ -21,6 +21,6 @@ void main(){
     distFromCamera = length(viewPos.xyz);
     finPos = proj*viewPos;
     gl_Position = finPos;
-    tCoord = texCoord * 3.0f;
+    tCoord = texCoord * 4.0f;
     // gl_Position = vec4(aPos.x*3.0f, aPos.y*3.0f, 0.0f, 1.0f);
 }
