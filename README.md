@@ -29,3 +29,8 @@ To manually build the project with testing included use the `-DBUILD_TESTS=TRUE`
 - build with cmake, use the generator of your preference.
 
 You might need to fiddle with the CMakeLists.txt to include the path to your package manager's include directories, for instance. I have not tested this on another OS yet.
+
+
+## Resources
+Airplane model: https://sketchfab.com/3d-models/aeroprakt-a22-foxbat-23496a87a16d417caeeae4e3fccda43d
+Airdrop model: https://sketchfab.com/3d-models/air-drop-cb9c66dc52464a37a84d4ea737b5df2c
