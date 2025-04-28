@@ -32,5 +32,10 @@ You might need to fiddle with the CMakeLists.txt to include the path to your pac
 
 
 ## Resources
-Airplane model: https://sketchfab.com/3d-models/aeroprakt-a22-foxbat-23496a87a16d417caeeae4e3fccda43d
-Airdrop model: https://sketchfab.com/3d-models/air-drop-cb9c66dc52464a37a84d4ea737b5df2c
+- Airplane model: https://sketchfab.com/3d-models/aeroprakt-a22-foxbat-23496a87a16d417caeeae4e3fccda43d
+- Airdrop model: https://sketchfab.com/3d-models/air-drop-cb9c66dc52464a37a84d4ea737b5df2c
+- font: https://fontzone.net/font-details/ocr-a-extended
+- aircraft propeller sound (truncated): https://youtu.be/IQj6URITLgs
+- parachute sound: https://www.zapsplat.com/music/parachute-deploy-open/
+- terrain colors: https://www.shadertoy.com/view/MdGfzh
+- water impl. inspiration: https://www.youtube.com/playlist?list=PLRIWtICgwaX23jiqVByUs0bqhnalNTNZh
