@@ -1,3 +1,4 @@
+![image](https://github.com/user-attachments/assets/a2ae1b88-00a7-4ee4-b358-4ccd8992347d)
 Thesis project.
 
 ## Build Instructions
