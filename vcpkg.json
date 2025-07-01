@@ -1,0 +1,16 @@
+{
+    "name": "thesis",
+    "version-string": "1.0.0",
+    "dependencies": [
+        "glfw3",
+        "assimp",
+        "freetype",
+        "libpng",
+        "bzip2",
+        "zlib",
+        "openal-soft",
+        "libsndfile",
+        "gtest",
+        "glm"
+    ]
+}

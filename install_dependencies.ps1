@@ -6,6 +6,7 @@ vcpkg install bzip2
 vcpkg install zlib
 vcpkg install openal-soft
 vcpkg install libsndfile
+vcpkg install glm
 
 #for testing
 vcpkg install gtest

@@ -37,7 +37,10 @@ include(FetchContent)
 
 FetchContent_Declare(
   googletest
-  URL https://github.com/google/googletest/archive/refs/heads/main.zip
+  GIT_REPOSITORY https://github.com/google/googletest.git
+  GIT_TAG cd430b47a54841ec45d64d2377d7cabaf0eba610
+#   URL https://github.com/google/googletest/archive/refs/heads/main.zip
+#  URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
 )
 
 FetchContent_MakeAvailable(googletest)
